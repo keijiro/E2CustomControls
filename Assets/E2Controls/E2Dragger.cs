@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UIElements;
-
 namespace E2Controls {
 
 sealed class E2Dragger : PointerManipulator
