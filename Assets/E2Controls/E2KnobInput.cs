@@ -5,15 +5,16 @@ namespace E2Controls {
 
 partial class E2KnobInput : VisualElement
 {
-    #region USS class name
+    #region Style class names
 
     public static readonly string ussClassName = "e2-knob__input";
 
     #endregion
 
-    #region Runtime public property
+    #region Runtime public properties
 
     public float NormalizedValue { get; set; }
+    public bool IsRelative { get; set; }
 
     #endregion
 
@@ -71,7 +72,17 @@ partial class E2KnobInput : VisualElement
 
         painter.strokeColor = context.visualElement.resolvedStyle.color;
         painter.BeginPath();
-        painter.Arc(center, radius, 120, tip_deg);
+        if (IsRelative)
+        {
+            if (tip_deg < 270)
+                painter.Arc(center, radius, tip_deg, 270);
+            else
+                painter.Arc(center, radius, 270, tip_deg);
+        }
+        else
+        {
+            painter.Arc(center, radius, 120, tip_deg);
+        }
         painter.Stroke();
 
         painter.BeginPath();

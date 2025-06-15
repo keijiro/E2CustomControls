@@ -14,12 +14,16 @@ public partial class E2Knob : BaseField<int>
     [UxmlAttribute]
     public int highValue { get => _highValue; set => SetHighValue(value); }
 
+    [UxmlAttribute]
+    public bool isRelative { get => _isRelative; set => SetIsRelative(value); }
+
     #endregion
 
     #region Property backend
 
     int _lowValue = 0;
     int _highValue = 100;
+    bool _isRelative;
 
     void SetLowValue(int value)
     {
@@ -30,6 +34,12 @@ public partial class E2Knob : BaseField<int>
     void SetHighValue(int value)
     {
         _highValue = value;
+        SetValueWithoutNotify(this.value);
+    }
+
+    void SetIsRelative(bool value)
+    {
+        _isRelative = value;
         SetValueWithoutNotify(this.value);
     }
 
@@ -61,6 +71,7 @@ public partial class E2Knob : BaseField<int>
         newValue = Mathf.Clamp(newValue, lowValue, highValue);
         base.SetValueWithoutNotify(newValue);
         _input.NormalizedValue = (float)(newValue - lowValue) / (highValue - lowValue);
+        _input.IsRelative = isRelative;
         _input.MarkDirtyRepaint();
     }
 
