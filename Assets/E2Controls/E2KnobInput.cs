@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace E2CustomControls {
+namespace E2Controls {
 
 partial class E2KnobInput : VisualElement
 {
@@ -83,4 +83,4 @@ partial class E2KnobInput : VisualElement
     #endregion
 }
 
-} // namespace E2CustomControls
+} // namespace E2Controls

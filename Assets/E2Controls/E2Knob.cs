@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace E2CustomControls {
+namespace E2Controls {
 
 [UxmlElement]
 public partial class E2Knob : BaseField<int>
@@ -67,4 +67,4 @@ public partial class E2Knob : BaseField<int>
     #endregion
 }
 
-} // namespace E2CustomControls
+} // namespace E2Controls
