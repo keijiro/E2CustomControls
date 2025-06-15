@@ -17,6 +17,9 @@ public partial class E2Knob : BaseField<int>
     [UxmlAttribute]
     public bool isRelative { get => _isRelative; set => SetIsRelative(value); }
 
+    [UxmlAttribute]
+    public float sensitivity { get; set; } = 1;
+
     #endregion
 
     #region Runtime public properties

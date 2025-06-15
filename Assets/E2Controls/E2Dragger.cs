@@ -62,7 +62,7 @@ sealed class E2Dragger : PointerManipulator
         if (!_start.ready) _start = (e.localPosition, _knob.value, true);
 
         var diff = e.localPosition - _start.origin;
-        var delta = (diff.x - diff.y) / 100;
+        var delta = (diff.x - diff.y) * _knob.sensitivity / 100;
         _knob.value = (int)(_start.value + delta * (_knob.highValue - _knob.lowValue));
 
         e.StopPropagation();

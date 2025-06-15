@@ -1,8 +1,8 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <ui:VisualElement data-source-type="LabelTester, Assembly-CSharp" style="flex-direction: row; margin-top: 8px; margin-right: 8px; margin-bottom: 8px; margin-left: 8px; align-items: center;">
         <E2Controls.E2Knob label="Attack" high-value="16" />
-        <E2Controls.E2Knob label="Pitch" high-value="64" is-relative="true" low-value="-64" />
-        <E2Controls.E2Knob label="Type" high-value="408">
+        <E2Controls.E2Knob label="Pitch" high-value="64" is-relative="true" low-value="-64" sensitivity="0.5" />
+        <E2Controls.E2Knob label="Type" high-value="408" sensitivity="0.2">
             <Bindings>
                 <ui:DataBinding property="value" data-source-path="TypeValue" binding-mode="TwoWay" />
             </Bindings>
