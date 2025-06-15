@@ -1,0 +1,15 @@
+{
+  "scopedRegistries": [
+    {
+      "name": "Keijiro",
+      "url": "https://registry.npmjs.com",
+      "scopes": [
+        "jp.keijiro"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.unity.inputsystem": "1.14.0",
+    "jp.keijiro.klak.ui-toolkit-assets": "0.2.0"
+  }
+}
