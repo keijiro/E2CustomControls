@@ -51,6 +51,7 @@ sealed class E2Dragger : PointerManipulator
         {
             _start = (e.localPosition, _knob.value, true);
             target.CapturePointer(_pointerID = e.pointerId);
+            _knob.showOverlay = true;
             e.StopPropagation();
         }
     }
@@ -76,6 +77,7 @@ sealed class E2Dragger : PointerManipulator
         {
             _pointerID = -1;
             target.ReleaseMouse();
+            _knob.showOverlay = false;
             e.StopPropagation();
         }
     }
