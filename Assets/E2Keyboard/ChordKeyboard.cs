@@ -6,36 +6,39 @@ using UnityEngine.UIElements;
 
 namespace E2Controls {
 
+// A chord keyboard UI element that allows selecting up to 4 notes across 3 octaves
 public sealed class ChordKeyboard : VisualElement
 {
     public new class UxmlFactory : UxmlFactory<ChordKeyboard, UxmlTraits> { }
     public new class UxmlTraits : VisualElement.UxmlTraits { }
 
+    // Events for chord and octave changes
     public event Action<int[]> OnChordChanged;
     public event Action<int> OnOctaveChanged;
     public event Action<int, bool> OnNoteToggled;
 
-    Queue<int> noteOrder = new Queue<int>();
-    HashSet<int> activeNotes = new HashSet<int>();
+    // Note management
+    Queue<int> noteOrder = new();
+    readonly HashSet<int> activeNotes = new();
     int baseOctave = 3;
+    
+    // Constants
     const int MAX_NOTES = 4;
     const int OCTAVE_RANGE = 3;
     const int TOTAL_SEMITONES = OCTAVE_RANGE * 12;
-
+    
+    // UI elements
     Button leftShiftButton;
     Button rightShiftButton;
     VisualElement keyboardContainer;
-    List<PianoKey> pianoKeys = new List<PianoKey>();
+    readonly List<PianoKey> pianoKeys = new();
 
-    readonly bool[] blackKeyPattern = { false, true, false, true, false, false, true, false, true, false, true, false };
+    // Piano layout pattern (true = black key)
+    static readonly bool[] BlackKeyPattern = { false, true, false, true, false, false, true, false, true, false, true, false };
 
     public ChordKeyboard()
     {
-        Initialize();
-    }
-
-    void Initialize()
-    {
+        // Setup basic styling
         AddToClassList("chord-keyboard");
         style.flexDirection = FlexDirection.Row;
         style.alignItems = Align.Center;
@@ -46,20 +49,15 @@ public sealed class ChordKeyboard : VisualElement
         UpdateShiftButtons();
     }
 
+    // Creates the main UI structure: left button, keyboard container, right button
     void CreateUI()
     {
-        leftShiftButton = new Button(() => ShiftOctave(-1))
-        {
-            text = "<",
-            name = "left-shift"
-        };
-        leftShiftButton.AddToClassList("octave-shift-button");
+        // Left octave shift button
+        leftShiftButton = CreateShiftButton("<", "left-shift", -1);
         Add(leftShiftButton);
 
-        keyboardContainer = new VisualElement
-        {
-            name = "keyboard-container"
-        };
+        // Piano keys container
+        keyboardContainer = new VisualElement { name = "keyboard-container" };
         keyboardContainer.AddToClassList("keyboard-container");
         keyboardContainer.style.flexGrow = 1;
         keyboardContainer.style.flexDirection = FlexDirection.Row;
@@ -67,117 +65,116 @@ public sealed class ChordKeyboard : VisualElement
         keyboardContainer.style.height = 100;
         Add(keyboardContainer);
 
-        rightShiftButton = new Button(() => ShiftOctave(1))
-        {
-            text = ">",
-            name = "right-shift"
-        };
-        rightShiftButton.AddToClassList("octave-shift-button");
+        // Right octave shift button
+        rightShiftButton = CreateShiftButton(">", "right-shift", 1);
         Add(rightShiftButton);
     }
 
+    // Helper method to create octave shift buttons
+    Button CreateShiftButton(string text, string name, int direction)
+    {
+        var button = new Button(() => ShiftOctave(direction))
+        {
+            text = text,
+            name = name
+        };
+        button.AddToClassList("octave-shift-button");
+        return button;
+    }
+
+    // Generates piano keys for the current octave range
     void GenerateKeys()
     {
         keyboardContainer.Clear();
         pianoKeys.Clear();
 
         int startNote = GetBaseNoteNumber();
-        List<PianoKey> whiteKeys = new List<PianoKey>();
-        List<PianoKey> blackKeys = new List<PianoKey>();
+        var (whiteKeys, blackKeys) = CreatePianoKeys(startNote);
+
+        // Add white keys first (they form the background)
+        whiteKeys.ForEach(keyboardContainer.Add);
+        
+        // Add black keys on top with positioning
+        foreach (var blackKey in blackKeys)
+        {
+            keyboardContainer.Add(blackKey);
+            PositionBlackKey(blackKey, startNote);
+        }
+
+        UpdateKeyStates();
+    }
+
+    // Creates and categorizes piano keys into white and black keys
+    (List<PianoKey> whiteKeys, List<PianoKey> blackKeys) CreatePianoKeys(int startNote)
+    {
+        var whiteKeys = new List<PianoKey>();
+        var blackKeys = new List<PianoKey>();
 
         for (int i = 0; i < TOTAL_SEMITONES; i++)
         {
             int midiNote = startNote + i;
-            int semitone = i % 12;
-            bool isBlack = blackKeyPattern[semitone];
+            bool isBlack = BlackKeyPattern[i % 12];
 
             var key = new PianoKey(midiNote, isBlack);
             key.OnClicked += OnKeyClicked;
-            
             pianoKeys.Add(key);
-            
+
             if (isBlack)
                 blackKeys.Add(key);
             else
                 whiteKeys.Add(key);
         }
 
-        foreach (var whiteKey in whiteKeys)
-        {
-            keyboardContainer.Add(whiteKey);
-        }
-
-        foreach (var blackKey in blackKeys)
-        {
-            keyboardContainer.Add(blackKey);
-            PositionBlackKey(blackKey);
-        }
-
-        UpdateKeyStates();
+        return (whiteKeys, blackKeys);
     }
 
-    void PositionBlackKey(PianoKey blackKey)
+    // Positions a black key relative to white keys
+    void PositionBlackKey(PianoKey blackKey, int startNote)
     {
-        int midiNote = blackKey.Note;
-        int startNote = GetBaseNoteNumber();
-        int semitone = (midiNote - startNote) % 12;
-        
-        int whiteKeyIndex = GetWhiteKeyIndex(midiNote - startNote);
+        int whiteKeyIndex = GetWhiteKeyIndex(blackKey.Note - startNote);
         float whiteKeyWidth = 100f / GetWhiteKeyCount();
         
         blackKey.style.position = Position.Absolute;
-        blackKey.style.left = Length.Percent(whiteKeyWidth * whiteKeyIndex + whiteKeyWidth * 0.7f);
+        blackKey.style.left = Length.Percent(whiteKeyWidth * (whiteKeyIndex + 0.7f));
         blackKey.style.width = Length.Percent(whiteKeyWidth * 0.6f);
         blackKey.style.height = Length.Percent(60);
         blackKey.style.top = 0;
     }
 
+    // Calculates the white key index for a given semitone offset
     int GetWhiteKeyIndex(int semitoneFromStart)
     {
         int whiteKeyCount = 0;
         for (int i = 0; i < semitoneFromStart; i++)
         {
-            if (!blackKeyPattern[i % 12])
+            if (!BlackKeyPattern[i % 12])
                 whiteKeyCount++;
         }
         return whiteKeyCount;
     }
 
+    // Gets total number of white keys in the current range
     int GetWhiteKeyCount()
     {
-        int count = 0;
-        for (int i = 0; i < TOTAL_SEMITONES; i++)
-        {
-            if (!blackKeyPattern[i % 12])
-                count++;
-        }
-        return count;
+        return Enumerable.Range(0, TOTAL_SEMITONES)
+            .Count(i => !BlackKeyPattern[i % 12]);
     }
 
-    void OnKeyClicked(int midiNote)
-    {
-        ToggleNote(midiNote);
-    }
+    // Handles piano key click events
+    void OnKeyClicked(int midiNote) => ToggleNote(midiNote);
 
+    // Toggles a note on/off, managing the 4-note limit with FIFO behavior
     void ToggleNote(int midiNote)
     {
         bool wasPressed = activeNotes.Contains(midiNote);
         
         if (wasPressed)
         {
-            activeNotes.Remove(midiNote);
-            RemoveFromQueue(midiNote);
+            RemoveNote(midiNote);
         }
         else
         {
-            if (activeNotes.Count >= MAX_NOTES)
-            {
-                int oldestNote = noteOrder.Dequeue();
-                activeNotes.Remove(oldestNote);
-            }
-            
-            activeNotes.Add(midiNote);
-            noteOrder.Enqueue(midiNote);
+            AddNote(midiNote);
         }
 
         UpdateKeyStates();
@@ -185,18 +182,27 @@ public sealed class ChordKeyboard : VisualElement
         OnChordChanged?.Invoke(GetCurrentChord());
     }
 
-    void RemoveFromQueue(int midiNote)
+    // Adds a note, removing the oldest if at maximum capacity
+    void AddNote(int midiNote)
     {
-        var tempQueue = new Queue<int>();
-        while (noteOrder.Count > 0)
+        if (activeNotes.Count >= MAX_NOTES)
         {
-            int note = noteOrder.Dequeue();
-            if (note != midiNote)
-                tempQueue.Enqueue(note);
+            int oldestNote = noteOrder.Dequeue();
+            activeNotes.Remove(oldestNote);
         }
-        noteOrder = tempQueue;
+        
+        activeNotes.Add(midiNote);
+        noteOrder.Enqueue(midiNote);
     }
 
+    // Removes a note from both active set and order queue
+    void RemoveNote(int midiNote)
+    {
+        activeNotes.Remove(midiNote);
+        noteOrder = new Queue<int>(noteOrder.Where(n => n != midiNote));
+    }
+
+    // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
         foreach (var key in pianoKeys)
@@ -205,10 +211,11 @@ public sealed class ChordKeyboard : VisualElement
         }
     }
 
+    // Shifts the keyboard octave range up or down
     void ShiftOctave(int direction)
     {
         int newOctave = baseOctave + direction;
-        if (newOctave < 0 || newOctave > 7) return;
+        if (newOctave is < 0 or > 7) return;
 
         baseOctave = newOctave;
         GenerateKeys();
@@ -216,22 +223,20 @@ public sealed class ChordKeyboard : VisualElement
         OnOctaveChanged?.Invoke(baseOctave);
     }
 
+    // Updates octave shift button enabled states
     void UpdateShiftButtons()
     {
         leftShiftButton.SetEnabled(baseOctave > 0);
         rightShiftButton.SetEnabled(baseOctave < 7);
     }
 
-    int GetBaseNoteNumber()
-    {
-        return baseOctave * 12 + 12;
-    }
+    // Calculates the MIDI note number for the current base octave
+    int GetBaseNoteNumber() => baseOctave * 12 + 12;
 
-    public int[] GetCurrentChord()
-    {
-        return activeNotes.OrderBy(n => n).ToArray();
-    }
+    // Gets the current chord as an ordered array of MIDI note numbers
+    public int[] GetCurrentChord() => activeNotes.OrderBy(n => n).ToArray();
 
+    // Clears all active notes
     public void ClearChord()
     {
         activeNotes.Clear();
@@ -240,6 +245,7 @@ public sealed class ChordKeyboard : VisualElement
         OnChordChanged?.Invoke(GetCurrentChord());
     }
 
+    // Gets the current base octave (0-7)
     public int CurrentBaseOctave => baseOctave;
 }
 
