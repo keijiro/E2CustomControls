@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 namespace E2Controls {
 
-public sealed class KeyboardTester : MonoBehaviour
+public sealed class E2KeyboardTest : MonoBehaviour
 {
     [SerializeField] UIDocument uiDocument;
     

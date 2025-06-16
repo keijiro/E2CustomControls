@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Unity.Properties;
 
-public sealed class LabelTester : MonoBehaviour
+public sealed class E2KnobTest : MonoBehaviour
 {
     [SerializeField] string[] _typeNames = null;
     [CreateProperty] public int TypeValue { get; set; }
