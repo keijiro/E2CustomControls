@@ -17,12 +17,16 @@
     height: 100%;
 }
 
-.piano-key--white.piano-key--hover {
+.piano-key--white.piano-key:hover {
     background-color: rgb(242, 242, 242);
 }
 
 .piano-key--white.piano-key--pressed {
     background-color: rgb(153, 204, 255);
+}
+
+.piano-key--white.piano-key--pressed:hover {
+    background-color: rgb(163, 214, 255);
 }
 
 /* Black Key Styles */
@@ -34,10 +38,14 @@
     border-right-color: black;
 }
 
-.piano-key--black.piano-key--hover {
+.piano-key--black.piano-key:hover {
     background-color: rgb(77, 77, 77);
 }
 
 .piano-key--black.piano-key--pressed {
     background-color: rgb(102, 153, 255);
+}
+
+.piano-key--black.piano-key--pressed:hover {
+    background-color: rgb(112, 163, 255);
 }

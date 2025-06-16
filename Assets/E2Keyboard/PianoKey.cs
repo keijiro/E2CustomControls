@@ -1,84 +1,36 @@
 using System;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace E2Controls {
 
-public class PianoKey : VisualElement
+public sealed class PianoKey : VisualElement
 {
     public event Action<int> OnClicked;
-    
-    int midiNote;
-    bool isBlackKey;
-    bool isPressed;
 
-    public int MidiNote => midiNote;
-    public bool IsBlackKey => isBlackKey;
-    public bool IsPressed => isPressed;
+    public int Note { get; private set; }
 
-    public PianoKey(int midiNote, bool isBlackKey)
+    public bool IsPressed { get => _pressed; set => SetPressed(value); }
+
+    bool _pressed;
+
+    public PianoKey(int note, bool isBlackKey)
     {
-        this.midiNote = midiNote;
-        this.isBlackKey = isBlackKey;
-        
-        Initialize();
-    }
-
-    void Initialize()
-    {
+        Note = note;
         AddToClassList("piano-key");
         AddToClassList(isBlackKey ? "piano-key--black" : "piano-key--white");
-        
-        this.RegisterCallback<ClickEvent>(OnClick);
-        this.RegisterCallback<MouseEnterEvent>(OnMouseEnter);
-        this.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
+        RegisterCallback<ClickEvent>(OnClick);
     }
-
 
     void OnClick(ClickEvent evt)
-    {
-        OnClicked?.Invoke(midiNote);
-    }
+      => OnClicked?.Invoke(Note);
 
-    void OnMouseEnter(MouseEnterEvent evt)
+    void SetPressed(bool pressed)
     {
-        if (!isPressed)
-        {
-            AddToClassList("piano-key--hover");
-        }
-    }
-
-    void OnMouseLeave(MouseLeaveEvent evt)
-    {
-        if (!isPressed)
-        {
-            RemoveFromClassList("piano-key--hover");
-        }
-    }
-
-    public void SetPressed(bool pressed)
-    {
-        if (isPressed == pressed) return;
-        
-        isPressed = pressed;
-        
+        _pressed = pressed;
         if (pressed)
-        {
             AddToClassList("piano-key--pressed");
-            RemoveFromClassList("piano-key--hover");
-        }
         else
-        {
             RemoveFromClassList("piano-key--pressed");
-        }
-    }
-
-    public string GetNoteName()
-    {
-        string[] noteNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-        int noteIndex = midiNote % 12;
-        int octave = midiNote / 12 - 1;
-        return $"{noteNames[noteIndex]}{octave}";
     }
 }
 

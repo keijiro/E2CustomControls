@@ -17,10 +17,10 @@ public sealed class ChordKeyboard : VisualElement
 
     Queue<int> noteOrder = new Queue<int>();
     HashSet<int> activeNotes = new HashSet<int>();
-    int baseOctave = 3; // C3開始
+    int baseOctave = 3;
     const int MAX_NOTES = 4;
-    const int OCTAVE_RANGE = 3; // 3オクターブ表示
-    const int TOTAL_SEMITONES = OCTAVE_RANGE * 12; // 36半音
+    const int OCTAVE_RANGE = 3;
+    const int TOTAL_SEMITONES = OCTAVE_RANGE * 12;
 
     Button leftShiftButton;
     Button rightShiftButton;
@@ -118,7 +118,7 @@ public sealed class ChordKeyboard : VisualElement
 
     void PositionBlackKey(PianoKey blackKey)
     {
-        int midiNote = blackKey.MidiNote;
+        int midiNote = blackKey.Note;
         int startNote = GetBaseNoteNumber();
         int semitone = (midiNote - startNote) % 12;
         
@@ -201,7 +201,7 @@ public sealed class ChordKeyboard : VisualElement
     {
         foreach (var key in pianoKeys)
         {
-            key.SetPressed(activeNotes.Contains(key.MidiNote));
+            key.IsPressed = activeNotes.Contains(key.Note);
         }
     }
 
