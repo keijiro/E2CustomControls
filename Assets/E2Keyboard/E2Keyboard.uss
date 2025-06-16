@@ -1,1 +1,43 @@
+/* Piano Key Base Styles */
+.piano-key {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+}
 
+/* White Key Styles */
+.piano-key--white {
+    background-color: white;
+    border-top-color: rgb(179, 179, 179);
+    border-bottom-color: rgb(179, 179, 179);
+    border-left-color: rgb(179, 179, 179);
+    border-right-color: rgb(179, 179, 179);
+    flex-grow: 1;
+    height: 100%;
+}
+
+.piano-key--white.piano-key--hover {
+    background-color: rgb(242, 242, 242);
+}
+
+.piano-key--white.piano-key--pressed {
+    background-color: rgb(153, 204, 255);
+}
+
+/* Black Key Styles */
+.piano-key--black {
+    background-color: rgb(51, 51, 51);
+    border-top-color: black;
+    border-bottom-color: black;
+    border-left-color: black;
+    border-right-color: black;
+}
+
+.piano-key--black.piano-key--hover {
+    background-color: rgb(77, 77, 77);
+}
+
+.piano-key--black.piano-key--pressed {
+    background-color: rgb(102, 153, 255);
+}
