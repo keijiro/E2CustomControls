@@ -10,11 +10,8 @@ public sealed partial class ChordKeyboard : VisualElement
 {
     #region Public members
 
-    public int[] GetCurrentChord() => 
-        new[] { _chord.note1, _chord.note2, _chord.note3, _chord.note4 }
-            .Where(n => n != -1).OrderBy(n => n).ToArray();
+    public (int, int, int, int) CurrentChord => _chord;
 
-    // Clears all active notes
     public void ClearChord()
     {
         _chord = (-1, -1, -1, -1);
@@ -30,24 +27,21 @@ public sealed partial class ChordKeyboard : VisualElement
     {
         AddToClassList("chord-keyboard");
 
-        // Left octave shift button
+        // Octave shift buttons
         _leftShiftButton = CreateShiftButton("<", -1);
-        Add(_leftShiftButton);
+        _rightShiftButton = CreateShiftButton(">", 1);
 
         // Piano keys container
         _keyboardContainer = new VisualElement();
         _keyboardContainer.AddToClassList("keyboard-container");
+
+        // Piano keys
+        var (whiteKeys, blackKeys) = CreatePianoKeys(BaseNote);
+
+        // Base layout
+        Add(_leftShiftButton);
         Add(_keyboardContainer);
-
-        // Right octave shift button
-        _rightShiftButton = CreateShiftButton(">", 1);
         Add(_rightShiftButton);
-
-        _keyboardContainer.Clear();
-        _pianoKeys.Clear();
-
-        var startNote = GetBaseNoteNumber();
-        var (whiteKeys, blackKeys) = CreatePianoKeys(startNote);
 
         // Add white keys first (they form the background)
         whiteKeys.ForEach(_keyboardContainer.Add);
@@ -56,12 +50,8 @@ public sealed partial class ChordKeyboard : VisualElement
         foreach (var blackKey in blackKeys)
         {
             _keyboardContainer.Add(blackKey);
-            PositionBlackKey(blackKey, startNote);
+            PositionBlackKey(blackKey, BaseNote);
         }
-
-        UpdateKeyStates();
-
-        UpdateShiftButtons();
     }
 
     #endregion
@@ -149,7 +139,7 @@ public sealed partial class ChordKeyboard : VisualElement
     // Handles piano key click events
     void OnKeyClicked(int relativeNote)
     {
-        var midiNote = GetBaseNoteNumber() + relativeNote;
+        var midiNote = BaseNote + relativeNote;
         var wasPressed = IsNoteActive(midiNote);
         
         if (wasPressed)
@@ -218,7 +208,7 @@ public sealed partial class ChordKeyboard : VisualElement
     // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
-        var baseNote = GetBaseNoteNumber();
+        var baseNote = BaseNote;
         foreach (var key in _pianoKeys)
         {
             var midiNote = baseNote + key.RelativeNote;
@@ -245,7 +235,7 @@ public sealed partial class ChordKeyboard : VisualElement
     }
 
     // Calculates the MIDI note number for the current base octave
-    int GetBaseNoteNumber() => _baseOctave * 12 + 12;
+    int BaseNote => _baseOctave * 12 + 12;
 
     // Sends ChangeEvent with current chord as (int, int, int, int) tuple
     void SendChordChangedEvent()
