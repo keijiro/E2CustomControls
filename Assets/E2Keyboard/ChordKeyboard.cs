@@ -8,59 +8,41 @@ namespace E2Controls {
 [UxmlElement]
 public sealed partial class ChordKeyboard : VisualElement
 {
-    // Constants
-    const int TotalKeys = 3 * 12;
+    #region Public members
 
-    // Note management - simplified to 4-note tuple
-    (int note1, int note2, int note3, int note4) _chord = (-1, -1, -1, -1);
-    int _baseOctave = 3;
-    
-    // UI elements
-    Button _leftShiftButton;
-    Button _rightShiftButton;
-    VisualElement _keyboardContainer;
-    List<PianoKey> _pianoKeys = new();
+    public int[] GetCurrentChord() => 
+        new[] { _chord.note1, _chord.note2, _chord.note3, _chord.note4 }
+            .Where(n => n != -1).OrderBy(n => n).ToArray();
 
-    // Piano layout pattern (true = black key)
-    static readonly bool[] BlackKeyPattern =
-      { false, true, false, true, false, false, true, false, true, false, true, false };
+    // Clears all active notes
+    public void ClearChord()
+    {
+        _chord = (-1, -1, -1, -1);
+        UpdateKeyStates();
+        SendChordChangedEvent();
+    }
+
+    #endregion
+
+    #region Constructor
 
     public ChordKeyboard()
     {
         AddToClassList("chord-keyboard");
-        CreateUI();
-        GenerateKeys();
-        UpdateShiftButtons();
-    }
 
-    void CreateUI()
-    {
         // Left octave shift button
-        _leftShiftButton = CreateShiftButton("<", "left-shift", -1);
+        _leftShiftButton = CreateShiftButton("<", -1);
         Add(_leftShiftButton);
 
         // Piano keys container
-        _keyboardContainer = new VisualElement { name = "keyboard-container" };
+        _keyboardContainer = new VisualElement();
         _keyboardContainer.AddToClassList("keyboard-container");
         Add(_keyboardContainer);
 
         // Right octave shift button
-        _rightShiftButton = CreateShiftButton(">", "right-shift", 1);
+        _rightShiftButton = CreateShiftButton(">", 1);
         Add(_rightShiftButton);
-    }
 
-    // Helper method to create octave shift buttons
-    Button CreateShiftButton(string text, string name, int direction)
-    {
-        var button = new Button(() => ShiftOctave(direction))
-            { text = text, name = name };
-        button.AddToClassList("octave-shift-button");
-        return button;
-    }
-
-    // Generates piano keys for the current octave range
-    void GenerateKeys()
-    {
         _keyboardContainer.Clear();
         _pianoKeys.Clear();
 
@@ -78,6 +60,36 @@ public sealed partial class ChordKeyboard : VisualElement
         }
 
         UpdateKeyStates();
+
+        UpdateShiftButtons();
+    }
+
+    #endregion
+
+    #region Private members
+
+    // Constants
+    const int TotalKeys = 3 * 12;
+
+    // Note management - simplified to 4-note tuple
+    (int note1, int note2, int note3, int note4) _chord = (-1, -1, -1, -1);
+    int _baseOctave = 3;
+    
+    // UI elements
+    Button _leftShiftButton;
+    Button _rightShiftButton;
+    VisualElement _keyboardContainer;
+    List<PianoKey> _pianoKeys = new();
+
+    static bool IsBlackKey(int noteInOctave)
+      => (noteInOctave & 1) == (noteInOctave % 12 < 5 ? 1 : 0);
+
+    // Helper method to create octave shift buttons
+    Button CreateShiftButton(string text, int direction)
+    {
+        var button = new Button(() => ShiftOctave(direction)){ text = text };
+        button.AddToClassList("octave-shift-button");
+        return button;
     }
 
     // Creates and categorizes piano keys into white and black keys
@@ -88,7 +100,7 @@ public sealed partial class ChordKeyboard : VisualElement
 
         for (var i = 0; i < TotalKeys; i++)
         {
-            var isBlack = BlackKeyPattern[i % 12];
+            var isBlack = IsBlackKey(i);
 
             var key = new PianoKey(i, isBlack);
             key.OnClicked += OnKeyClicked;
@@ -121,7 +133,7 @@ public sealed partial class ChordKeyboard : VisualElement
         var whiteKeyCount = 0;
         for (var i = 0; i < semitoneFromStart; i++)
         {
-            if (!BlackKeyPattern[i % 12])
+            if (!IsBlackKey(i))
                 whiteKeyCount++;
         }
         return whiteKeyCount;
@@ -131,19 +143,13 @@ public sealed partial class ChordKeyboard : VisualElement
     int GetWhiteKeyCount()
     {
         return Enumerable.Range(0, TotalKeys)
-            .Count(i => !BlackKeyPattern[i % 12]);
+            .Count(i => !IsBlackKey(i));
     }
 
     // Handles piano key click events
     void OnKeyClicked(int relativeNote)
     {
         var midiNote = GetBaseNoteNumber() + relativeNote;
-        ToggleNote(midiNote);
-    }
-
-    // Toggles a note on/off with FIFO behavior for 4-note limit
-    void ToggleNote(int midiNote)
-    {
         var wasPressed = IsNoteActive(midiNote);
         
         if (wasPressed)
@@ -241,22 +247,6 @@ public sealed partial class ChordKeyboard : VisualElement
     // Calculates the MIDI note number for the current base octave
     int GetBaseNoteNumber() => _baseOctave * 12 + 12;
 
-    // Gets the current chord as an ordered array of MIDI note numbers
-    public int[] GetCurrentChord() => 
-        new[] { _chord.note1, _chord.note2, _chord.note3, _chord.note4 }
-            .Where(n => n != -1).OrderBy(n => n).ToArray();
-
-    // Clears all active notes
-    public void ClearChord()
-    {
-        _chord = (-1, -1, -1, -1);
-        UpdateKeyStates();
-        SendChordChangedEvent();
-    }
-
-    // Gets the current base octave (0-7)
-    public int CurrentBaseOctave => _baseOctave;
-
     // Sends ChangeEvent with current chord as (int, int, int, int) tuple
     void SendChordChangedEvent()
     {
@@ -264,6 +254,8 @@ public sealed partial class ChordKeyboard : VisualElement
         evt.target = this;
         SendEvent(evt);
     }
+
+    #endregion
 }
 
 } // namespace E2Controls
