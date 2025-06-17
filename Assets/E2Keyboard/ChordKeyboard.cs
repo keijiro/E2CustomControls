@@ -8,19 +8,18 @@ namespace E2Controls {
 [UxmlElement]
 public sealed partial class ChordKeyboard : VisualElement
 {
-    // Note management - simplified to 4-note tuple
-    (int note1, int note2, int note3, int note4) chord = (-1, -1, -1, -1);
-    int baseOctave = 3;
-    
     // Constants
-    const int OCTAVE_RANGE = 3;
-    const int TOTAL_SEMITONES = OCTAVE_RANGE * 12;
+    const int TotalKeys = 3 * 12;
+
+    // Note management - simplified to 4-note tuple
+    (int note1, int note2, int note3, int note4) _chord = (-1, -1, -1, -1);
+    int _baseOctave = 3;
     
     // UI elements
-    Button leftShiftButton;
-    Button rightShiftButton;
-    VisualElement keyboardContainer;
-    List<PianoKey> pianoKeys = new();
+    Button _leftShiftButton;
+    Button _rightShiftButton;
+    VisualElement _keyboardContainer;
+    List<PianoKey> _pianoKeys = new();
 
     // Piano layout pattern (true = black key)
     static readonly bool[] BlackKeyPattern =
@@ -37,17 +36,17 @@ public sealed partial class ChordKeyboard : VisualElement
     void CreateUI()
     {
         // Left octave shift button
-        leftShiftButton = CreateShiftButton("<", "left-shift", -1);
-        Add(leftShiftButton);
+        _leftShiftButton = CreateShiftButton("<", "left-shift", -1);
+        Add(_leftShiftButton);
 
         // Piano keys container
-        keyboardContainer = new VisualElement { name = "keyboard-container" };
-        keyboardContainer.AddToClassList("keyboard-container");
-        Add(keyboardContainer);
+        _keyboardContainer = new VisualElement { name = "keyboard-container" };
+        _keyboardContainer.AddToClassList("keyboard-container");
+        Add(_keyboardContainer);
 
         // Right octave shift button
-        rightShiftButton = CreateShiftButton(">", "right-shift", 1);
-        Add(rightShiftButton);
+        _rightShiftButton = CreateShiftButton(">", "right-shift", 1);
+        Add(_rightShiftButton);
     }
 
     // Helper method to create octave shift buttons
@@ -62,19 +61,19 @@ public sealed partial class ChordKeyboard : VisualElement
     // Generates piano keys for the current octave range
     void GenerateKeys()
     {
-        keyboardContainer.Clear();
-        pianoKeys.Clear();
+        _keyboardContainer.Clear();
+        _pianoKeys.Clear();
 
         int startNote = GetBaseNoteNumber();
         var (whiteKeys, blackKeys) = CreatePianoKeys(startNote);
 
         // Add white keys first (they form the background)
-        whiteKeys.ForEach(keyboardContainer.Add);
+        whiteKeys.ForEach(_keyboardContainer.Add);
         
         // Add black keys on top with positioning
         foreach (var blackKey in blackKeys)
         {
-            keyboardContainer.Add(blackKey);
+            _keyboardContainer.Add(blackKey);
             PositionBlackKey(blackKey, startNote);
         }
 
@@ -87,13 +86,13 @@ public sealed partial class ChordKeyboard : VisualElement
         var whiteKeys = new List<PianoKey>();
         var blackKeys = new List<PianoKey>();
 
-        for (int i = 0; i < TOTAL_SEMITONES; i++)
+        for (int i = 0; i < TotalKeys; i++)
         {
             bool isBlack = BlackKeyPattern[i % 12];
 
             var key = new PianoKey(i, isBlack);
             key.OnClicked += OnKeyClicked;
-            pianoKeys.Add(key);
+            _pianoKeys.Add(key);
 
             if (isBlack)
                 blackKeys.Add(key);
@@ -131,7 +130,7 @@ public sealed partial class ChordKeyboard : VisualElement
     // Gets total number of white keys in the current range
     int GetWhiteKeyCount()
     {
-        return Enumerable.Range(0, TOTAL_SEMITONES)
+        return Enumerable.Range(0, TotalKeys)
             .Count(i => !BlackKeyPattern[i % 12]);
     }
 
@@ -160,17 +159,30 @@ public sealed partial class ChordKeyboard : VisualElement
         SendChordChangedEvent();
     }
 
-    // Adds a note with FIFO behavior
+    // Adds a note with FIFO behavior (only when all 4 slots are filled)
     void AddNote(int midiNote)
     {
-        chord = (chord.note2, chord.note3, chord.note4, midiNote);
+        var (n1, n2, n3, n4) = _chord;
+        
+        // Find first empty slot
+        if (n1 == -1)
+            _chord = (midiNote, n2, n3, n4);
+        else if (n2 == -1)
+            _chord = (n1, midiNote, n3, n4);
+        else if (n3 == -1)
+            _chord = (n1, n2, midiNote, n4);
+        else if (n4 == -1)
+            _chord = (n1, n2, n3, midiNote);
+        else
+            // All slots filled, use FIFO
+            _chord = (n2, n3, n4, midiNote);
     }
 
     // Removes a specific note from chord
     void RemoveNote(int midiNote)
     {
-        var (n1, n2, n3, n4) = chord;
-        chord = (
+        var (n1, n2, n3, n4) = _chord;
+        _chord = (
             n1 == midiNote ? -1 : n1,
             n2 == midiNote ? -1 : n2,
             n3 == midiNote ? -1 : n3,
@@ -182,9 +194,9 @@ public sealed partial class ChordKeyboard : VisualElement
     // Compacts chord by moving active notes to the front
     void CompactChord()
     {
-        var activeNotes = new[] { chord.note1, chord.note2, chord.note3, chord.note4 }
+        var activeNotes = new[] { _chord.note1, _chord.note2, _chord.note3, _chord.note4 }
             .Where(n => n != -1).ToArray();
-        chord = (
+        _chord = (
             activeNotes.Length > 0 ? activeNotes[0] : -1,
             activeNotes.Length > 1 ? activeNotes[1] : -1,
             activeNotes.Length > 2 ? activeNotes[2] : -1,
@@ -194,14 +206,14 @@ public sealed partial class ChordKeyboard : VisualElement
 
     // Checks if a note is currently active
     bool IsNoteActive(int midiNote) =>
-        chord.note1 == midiNote || chord.note2 == midiNote || 
-        chord.note3 == midiNote || chord.note4 == midiNote;
+        _chord.note1 == midiNote || _chord.note2 == midiNote || 
+        _chord.note3 == midiNote || _chord.note4 == midiNote;
 
     // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
         int baseNote = GetBaseNoteNumber();
-        foreach (var key in pianoKeys)
+        foreach (var key in _pianoKeys)
         {
             int midiNote = baseNote + key.RelativeNote;
             key.IsPressed = IsNoteActive(midiNote);
@@ -211,10 +223,10 @@ public sealed partial class ChordKeyboard : VisualElement
     // Shifts the keyboard octave range up or down
     void ShiftOctave(int direction)
     {
-        int newOctave = baseOctave + direction;
+        int newOctave = _baseOctave + direction;
         if (newOctave is < 0 or > 7) return;
 
-        baseOctave = newOctave;
+        _baseOctave = newOctave;
         UpdateKeyStates();
         UpdateShiftButtons();
     }
@@ -222,33 +234,33 @@ public sealed partial class ChordKeyboard : VisualElement
     // Updates octave shift button enabled states
     void UpdateShiftButtons()
     {
-        leftShiftButton.SetEnabled(baseOctave > 0);
-        rightShiftButton.SetEnabled(baseOctave < 7);
+        _leftShiftButton.SetEnabled(_baseOctave > 0);
+        _rightShiftButton.SetEnabled(_baseOctave < 7);
     }
 
     // Calculates the MIDI note number for the current base octave
-    int GetBaseNoteNumber() => baseOctave * 12 + 12;
+    int GetBaseNoteNumber() => _baseOctave * 12 + 12;
 
     // Gets the current chord as an ordered array of MIDI note numbers
     public int[] GetCurrentChord() => 
-        new[] { chord.note1, chord.note2, chord.note3, chord.note4 }
+        new[] { _chord.note1, _chord.note2, _chord.note3, _chord.note4 }
             .Where(n => n != -1).OrderBy(n => n).ToArray();
 
     // Clears all active notes
     public void ClearChord()
     {
-        chord = (-1, -1, -1, -1);
+        _chord = (-1, -1, -1, -1);
         UpdateKeyStates();
         SendChordChangedEvent();
     }
 
     // Gets the current base octave (0-7)
-    public int CurrentBaseOctave => baseOctave;
+    public int CurrentBaseOctave => _baseOctave;
 
     // Sends ChangeEvent with current chord as (int, int, int, int) tuple
     void SendChordChangedEvent()
     {
-        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, chord);
+        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, _chord);
         evt.target = this;
         SendEvent(evt);
     }

@@ -9,9 +9,9 @@ public sealed class PianoKey : VisualElement
 
     public int RelativeNote { get; private set; }
 
-    public bool IsPressed { get => _pressed; set => SetPressed(value); }
+    public bool IsPressed { get => _isPressed; set => SetPressed(value); }
 
-    bool _pressed;
+    bool _isPressed;
 
     public PianoKey(int relativeNote, bool isBlackKey)
     {
@@ -26,7 +26,7 @@ public sealed class PianoKey : VisualElement
 
     void SetPressed(bool pressed)
     {
-        _pressed = pressed;
+        _isPressed = pressed;
         if (pressed)
             AddToClassList("piano-key--pressed");
         else
