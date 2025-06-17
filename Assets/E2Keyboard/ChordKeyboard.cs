@@ -89,10 +89,9 @@ public sealed partial class ChordKeyboard : VisualElement
 
         for (int i = 0; i < TOTAL_SEMITONES; i++)
         {
-            int midiNote = startNote + i;
             bool isBlack = BlackKeyPattern[i % 12];
 
-            var key = new PianoKey(midiNote, isBlack);
+            var key = new PianoKey(i, isBlack);
             key.OnClicked += OnKeyClicked;
             pianoKeys.Add(key);
 
@@ -108,7 +107,7 @@ public sealed partial class ChordKeyboard : VisualElement
     // Positions a black key relative to white keys
     void PositionBlackKey(PianoKey blackKey, int startNote)
     {
-        int whiteKeyIndex = GetWhiteKeyIndex(blackKey.Note - startNote);
+        int whiteKeyIndex = GetWhiteKeyIndex(blackKey.RelativeNote);
         float whiteKeyWidth = 100f / GetWhiteKeyCount();
         
         blackKey.AddToClassList("piano-key--black-positioned");
@@ -137,7 +136,11 @@ public sealed partial class ChordKeyboard : VisualElement
     }
 
     // Handles piano key click events
-    void OnKeyClicked(int midiNote) => ToggleNote(midiNote);
+    void OnKeyClicked(int relativeNote)
+    {
+        int midiNote = GetBaseNoteNumber() + relativeNote;
+        ToggleNote(midiNote);
+    }
 
     // Toggles a note on/off with FIFO behavior for 4-note limit
     void ToggleNote(int midiNote)
@@ -197,24 +200,12 @@ public sealed partial class ChordKeyboard : VisualElement
     // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
+        int baseNote = GetBaseNoteNumber();
         foreach (var key in pianoKeys)
         {
-            key.IsPressed = IsNoteActive(key.Note);
+            int midiNote = baseNote + key.RelativeNote;
+            key.IsPressed = IsNoteActive(midiNote);
         }
-    }
-
-    // Updates existing keys with new octave range - efficient approach
-    void UpdateKeysForOctave()
-    {
-        int startNote = GetBaseNoteNumber();
-        
-        for (int i = 0; i < pianoKeys.Count; i++)
-        {
-            int newMidiNote = startNote + i;
-            pianoKeys[i].SetNote(newMidiNote);
-        }
-        
-        UpdateKeyStates();
     }
 
     // Shifts the keyboard octave range up or down
@@ -224,7 +215,7 @@ public sealed partial class ChordKeyboard : VisualElement
         if (newOctave is < 0 or > 7) return;
 
         baseOctave = newOctave;
-        UpdateKeysForOctave();
+        UpdateKeyStates();
         UpdateShiftButtons();
     }
 
