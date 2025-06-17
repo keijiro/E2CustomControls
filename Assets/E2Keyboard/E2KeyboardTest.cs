@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,7 +10,6 @@ public sealed class E2KeyboardTest : MonoBehaviour
     
     ChordKeyboard chordKeyboard;
     Label chordDisplay;
-    Label octaveDisplay;
 
     void Start()
     {
@@ -25,9 +25,7 @@ public sealed class E2KeyboardTest : MonoBehaviour
         
         chordKeyboard = new ChordKeyboard();
         
-        chordKeyboard.OnChordChanged += OnChordChanged;
-        chordKeyboard.OnOctaveChanged += OnOctaveChanged;
-        chordKeyboard.OnNoteToggled += OnNoteToggled;
+        chordKeyboard.RegisterCallback<ChangeEvent<(int, int, int, int)>>(OnChordChanged);
         
         chordDisplay = new Label("Current Chord: None")
         {
@@ -36,13 +34,6 @@ public sealed class E2KeyboardTest : MonoBehaviour
         chordDisplay.style.fontSize = 16;
         chordDisplay.style.marginBottom = 10;
         
-        octaveDisplay = new Label($"Base Octave: C{chordKeyboard.CurrentBaseOctave}")
-        {
-            name = "octave-display"
-        };
-        octaveDisplay.style.fontSize = 14;
-        octaveDisplay.style.marginBottom = 10;
-        
         var clearButton = new Button(() => chordKeyboard.ClearChord())
         {
             text = "Clear Chord"
@@ -50,7 +41,6 @@ public sealed class E2KeyboardTest : MonoBehaviour
         clearButton.style.marginTop = 10;
         clearButton.style.width = 100;
         
-        root.Add(octaveDisplay);
         root.Add(chordDisplay);
         root.Add(chordKeyboard);
         root.Add(clearButton);
@@ -65,42 +55,34 @@ public sealed class E2KeyboardTest : MonoBehaviour
         root.Add(debugInfo);
     }
 
-    void OnChordChanged(int[] midiNotes)
+    void OnChordChanged(ChangeEvent<(int, int, int, int)> evt)
     {
-        if (midiNotes.Length == 0)
+        var (note1, note2, note3, note4) = evt.newValue;
+        var activeNotes = new[] { note1, note2, note3, note4 }.Where(n => n != -1).ToArray();
+        
+        if (activeNotes.Length == 0)
         {
             chordDisplay.text = "Current Chord: None";
         }
         else
         {
             string chordText = "Current Chord: ";
-            for (int i = 0; i < midiNotes.Length; i++)
+            for (int i = 0; i < activeNotes.Length; i++)
             {
-                chordText += GetNoteName(midiNotes[i]);
-                if (i < midiNotes.Length - 1)
+                chordText += GetNoteName(activeNotes[i]);
+                if (i < activeNotes.Length - 1)
                     chordText += ", ";
             }
             chordDisplay.text = chordText;
         }
         
-        string midiText = midiNotes.Length > 0 ? 
-            $" (MIDI: {string.Join(", ", midiNotes)})" : "";
+        string midiText = activeNotes.Length > 0 ? 
+            $" (MIDI: {string.Join(", ", activeNotes)})" : "";
         chordDisplay.text += midiText;
         
-        Debug.Log($"Chord changed: {string.Join(", ", midiNotes)}");
+        Debug.Log($"Chord changed: {string.Join(", ", activeNotes)}");
     }
 
-    void OnOctaveChanged(int baseOctave)
-    {
-        octaveDisplay.text = $"Base Octave: C{baseOctave}";
-        Debug.Log($"Octave changed to: C{baseOctave}");
-    }
-
-    void OnNoteToggled(int midiNote, bool isPressed)
-    {
-        string action = isPressed ? "pressed" : "released";
-        Debug.Log($"Note {GetNoteName(midiNote)} (MIDI: {midiNote}) {action}");
-    }
 
     string GetNoteName(int midiNote)
     {

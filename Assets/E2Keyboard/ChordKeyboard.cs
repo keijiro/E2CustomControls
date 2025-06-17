@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -9,18 +7,11 @@ namespace E2Controls {
 [UxmlElement]
 public sealed partial class ChordKeyboard : VisualElement
 {
-    // Events for chord and octave changes
-    public event Action<int[]> OnChordChanged;
-    public event Action<int> OnOctaveChanged;
-    public event Action<int, bool> OnNoteToggled;
-
-    // Note management
-    Queue<int> noteOrder = new();
-    readonly HashSet<int> activeNotes = new();
+    // Note management - simplified to 4-note tuple
+    (int note1, int note2, int note3, int note4) chord = (-1, -1, -1, -1);
     int baseOctave = 3;
     
     // Constants
-    const int MAX_NOTES = 4;
     const int OCTAVE_RANGE = 3;
     const int TOTAL_SEMITONES = OCTAVE_RANGE * 12;
     
@@ -28,7 +19,7 @@ public sealed partial class ChordKeyboard : VisualElement
     Button leftShiftButton;
     Button rightShiftButton;
     VisualElement keyboardContainer;
-    readonly List<PianoKey> pianoKeys = new();
+    readonly System.Collections.Generic.List<PianoKey> pianoKeys = new();
 
     // Piano layout pattern (true = black key)
     static readonly bool[] BlackKeyPattern = { false, true, false, true, false, false, true, false, true, false, true, false };
@@ -102,10 +93,10 @@ public sealed partial class ChordKeyboard : VisualElement
     }
 
     // Creates and categorizes piano keys into white and black keys
-    (List<PianoKey> whiteKeys, List<PianoKey> blackKeys) CreatePianoKeys(int startNote)
+    (System.Collections.Generic.List<PianoKey> whiteKeys, System.Collections.Generic.List<PianoKey> blackKeys) CreatePianoKeys(int startNote)
     {
-        var whiteKeys = new List<PianoKey>();
-        var blackKeys = new List<PianoKey>();
+        var whiteKeys = new System.Collections.Generic.List<PianoKey>();
+        var blackKeys = new System.Collections.Generic.List<PianoKey>();
 
         for (int i = 0; i < TOTAL_SEMITONES; i++)
         {
@@ -160,10 +151,10 @@ public sealed partial class ChordKeyboard : VisualElement
     // Handles piano key click events
     void OnKeyClicked(int midiNote) => ToggleNote(midiNote);
 
-    // Toggles a note on/off, managing the 4-note limit with FIFO behavior
+    // Toggles a note on/off with FIFO behavior for 4-note limit
     void ToggleNote(int midiNote)
     {
-        bool wasPressed = activeNotes.Contains(midiNote);
+        bool wasPressed = IsNoteActive(midiNote);
         
         if (wasPressed)
         {
@@ -175,36 +166,52 @@ public sealed partial class ChordKeyboard : VisualElement
         }
 
         UpdateKeyStates();
-        OnNoteToggled?.Invoke(midiNote, !wasPressed);
-        OnChordChanged?.Invoke(GetCurrentChord());
+        SendChordChangedEvent();
     }
 
-    // Adds a note, removing the oldest if at maximum capacity
+    // Adds a note with FIFO behavior
     void AddNote(int midiNote)
     {
-        if (activeNotes.Count >= MAX_NOTES)
-        {
-            int oldestNote = noteOrder.Dequeue();
-            activeNotes.Remove(oldestNote);
-        }
-        
-        activeNotes.Add(midiNote);
-        noteOrder.Enqueue(midiNote);
+        chord = (chord.note2, chord.note3, chord.note4, midiNote);
     }
 
-    // Removes a note from both active set and order queue
+    // Removes a specific note from chord
     void RemoveNote(int midiNote)
     {
-        activeNotes.Remove(midiNote);
-        noteOrder = new Queue<int>(noteOrder.Where(n => n != midiNote));
+        var (n1, n2, n3, n4) = chord;
+        chord = (
+            n1 == midiNote ? -1 : n1,
+            n2 == midiNote ? -1 : n2,
+            n3 == midiNote ? -1 : n3,
+            n4 == midiNote ? -1 : n4
+        );
+        CompactChord();
     }
+
+    // Compacts chord by moving active notes to the front
+    void CompactChord()
+    {
+        var activeNotes = new[] { chord.note1, chord.note2, chord.note3, chord.note4 }
+            .Where(n => n != -1).ToArray();
+        chord = (
+            activeNotes.Length > 0 ? activeNotes[0] : -1,
+            activeNotes.Length > 1 ? activeNotes[1] : -1,
+            activeNotes.Length > 2 ? activeNotes[2] : -1,
+            activeNotes.Length > 3 ? activeNotes[3] : -1
+        );
+    }
+
+    // Checks if a note is currently active
+    bool IsNoteActive(int midiNote) =>
+        chord.note1 == midiNote || chord.note2 == midiNote || 
+        chord.note3 == midiNote || chord.note4 == midiNote;
 
     // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
         foreach (var key in pianoKeys)
         {
-            key.IsPressed = activeNotes.Contains(key.Note);
+            key.IsPressed = IsNoteActive(key.Note);
         }
     }
 
@@ -217,7 +224,6 @@ public sealed partial class ChordKeyboard : VisualElement
         baseOctave = newOctave;
         GenerateKeys();
         UpdateShiftButtons();
-        OnOctaveChanged?.Invoke(baseOctave);
     }
 
     // Updates octave shift button enabled states
@@ -231,19 +237,28 @@ public sealed partial class ChordKeyboard : VisualElement
     int GetBaseNoteNumber() => baseOctave * 12 + 12;
 
     // Gets the current chord as an ordered array of MIDI note numbers
-    public int[] GetCurrentChord() => activeNotes.OrderBy(n => n).ToArray();
+    public int[] GetCurrentChord() => 
+        new[] { chord.note1, chord.note2, chord.note3, chord.note4 }
+            .Where(n => n != -1).OrderBy(n => n).ToArray();
 
     // Clears all active notes
     public void ClearChord()
     {
-        activeNotes.Clear();
-        noteOrder.Clear();
+        chord = (-1, -1, -1, -1);
         UpdateKeyStates();
-        OnChordChanged?.Invoke(GetCurrentChord());
+        SendChordChangedEvent();
     }
 
     // Gets the current base octave (0-7)
     public int CurrentBaseOctave => baseOctave;
+
+    // Sends ChangeEvent with current chord as (int, int, int, int) tuple
+    void SendChordChangedEvent()
+    {
+        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, chord);
+        evt.target = this;
+        SendEvent(evt);
+    }
 }
 
 } // namespace E2Controls
