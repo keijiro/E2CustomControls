@@ -64,7 +64,7 @@ public sealed partial class ChordKeyboard : VisualElement
         _keyboardContainer.Clear();
         _pianoKeys.Clear();
 
-        int startNote = GetBaseNoteNumber();
+        var startNote = GetBaseNoteNumber();
         var (whiteKeys, blackKeys) = CreatePianoKeys(startNote);
 
         // Add white keys first (they form the background)
@@ -86,9 +86,9 @@ public sealed partial class ChordKeyboard : VisualElement
         var whiteKeys = new List<PianoKey>();
         var blackKeys = new List<PianoKey>();
 
-        for (int i = 0; i < TotalKeys; i++)
+        for (var i = 0; i < TotalKeys; i++)
         {
-            bool isBlack = BlackKeyPattern[i % 12];
+            var isBlack = BlackKeyPattern[i % 12];
 
             var key = new PianoKey(i, isBlack);
             key.OnClicked += OnKeyClicked;
@@ -106,8 +106,8 @@ public sealed partial class ChordKeyboard : VisualElement
     // Positions a black key relative to white keys
     void PositionBlackKey(PianoKey blackKey, int startNote)
     {
-        int whiteKeyIndex = GetWhiteKeyIndex(blackKey.RelativeNote);
-        float whiteKeyWidth = 100f / GetWhiteKeyCount();
+        var whiteKeyIndex = GetWhiteKeyIndex(blackKey.RelativeNote);
+        var whiteKeyWidth = 100f / GetWhiteKeyCount();
         
         blackKey.AddToClassList("piano-key--black-positioned");
         blackKey.style.left = Length.Percent(whiteKeyWidth * (whiteKeyIndex - 1 + 0.7f));
@@ -118,8 +118,8 @@ public sealed partial class ChordKeyboard : VisualElement
     // Calculates the white key index for a given semitone offset
     int GetWhiteKeyIndex(int semitoneFromStart)
     {
-        int whiteKeyCount = 0;
-        for (int i = 0; i < semitoneFromStart; i++)
+        var whiteKeyCount = 0;
+        for (var i = 0; i < semitoneFromStart; i++)
         {
             if (!BlackKeyPattern[i % 12])
                 whiteKeyCount++;
@@ -137,14 +137,14 @@ public sealed partial class ChordKeyboard : VisualElement
     // Handles piano key click events
     void OnKeyClicked(int relativeNote)
     {
-        int midiNote = GetBaseNoteNumber() + relativeNote;
+        var midiNote = GetBaseNoteNumber() + relativeNote;
         ToggleNote(midiNote);
     }
 
     // Toggles a note on/off with FIFO behavior for 4-note limit
     void ToggleNote(int midiNote)
     {
-        bool wasPressed = IsNoteActive(midiNote);
+        var wasPressed = IsNoteActive(midiNote);
         
         if (wasPressed)
         {
@@ -212,10 +212,10 @@ public sealed partial class ChordKeyboard : VisualElement
     // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
-        int baseNote = GetBaseNoteNumber();
+        var baseNote = GetBaseNoteNumber();
         foreach (var key in _pianoKeys)
         {
-            int midiNote = baseNote + key.RelativeNote;
+            var midiNote = baseNote + key.RelativeNote;
             key.IsPressed = IsNoteActive(midiNote);
         }
     }
@@ -223,7 +223,7 @@ public sealed partial class ChordKeyboard : VisualElement
     // Shifts the keyboard octave range up or down
     void ShiftOctave(int direction)
     {
-        int newOctave = _baseOctave + direction;
+        var newOctave = _baseOctave + direction;
         if (newOctave is < 0 or > 7) return;
 
         _baseOctave = newOctave;
