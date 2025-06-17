@@ -112,7 +112,7 @@ public sealed partial class ChordKeyboard : VisualElement
         float whiteKeyWidth = 100f / GetWhiteKeyCount();
         
         blackKey.AddToClassList("piano-key--black-positioned");
-        blackKey.style.left = Length.Percent(whiteKeyWidth * (whiteKeyIndex + 0.7f));
+        blackKey.style.left = Length.Percent(whiteKeyWidth * (whiteKeyIndex - 1 + 0.7f));
         blackKey.style.width = Length.Percent(whiteKeyWidth * 0.6f);
         blackKey.style.height = Length.Percent(60);
     }
@@ -203,6 +203,20 @@ public sealed partial class ChordKeyboard : VisualElement
         }
     }
 
+    // Updates existing keys with new octave range - efficient approach
+    void UpdateKeysForOctave()
+    {
+        int startNote = GetBaseNoteNumber();
+        
+        for (int i = 0; i < pianoKeys.Count; i++)
+        {
+            int newMidiNote = startNote + i;
+            pianoKeys[i].SetNote(newMidiNote);
+        }
+        
+        UpdateKeyStates();
+    }
+
     // Shifts the keyboard octave range up or down
     void ShiftOctave(int direction)
     {
@@ -210,7 +224,7 @@ public sealed partial class ChordKeyboard : VisualElement
         if (newOctave is < 0 or > 7) return;
 
         baseOctave = newOctave;
-        GenerateKeys();
+        UpdateKeysForOctave();
         UpdateShiftButtons();
     }
 

@@ -8,6 +8,11 @@ public sealed class PianoKey : VisualElement
     public event Action<int> OnClicked;
 
     public int Note { get; private set; }
+    
+    public void SetNote(int note)
+    {
+        Note = note;
+    }
 
     public bool IsPressed { get => _pressed; set => SetPressed(value); }
 
