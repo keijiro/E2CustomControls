@@ -49,3 +49,25 @@
 .piano-key--black.piano-key--pressed:hover {
     background-color: rgb(112, 163, 255);
 }
+
+.chord-keyboard {
+    flex-direction: row;
+    align-items: center;
+    height: 120px;
+}
+
+.keyboard-container {
+    flex-grow: 1;
+    flex-direction: row;
+    position: relative;
+    height: 100px;
+}
+
+.octave-shift-button {
+    
+}
+
+.piano-key--black-positioned {
+    position: absolute;
+    top: 0;
+}

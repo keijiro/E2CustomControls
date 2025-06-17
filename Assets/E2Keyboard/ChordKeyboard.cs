@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -19,25 +20,20 @@ public sealed partial class ChordKeyboard : VisualElement
     Button leftShiftButton;
     Button rightShiftButton;
     VisualElement keyboardContainer;
-    readonly System.Collections.Generic.List<PianoKey> pianoKeys = new();
+    List<PianoKey> pianoKeys = new();
 
     // Piano layout pattern (true = black key)
-    static readonly bool[] BlackKeyPattern = { false, true, false, true, false, false, true, false, true, false, true, false };
+    static readonly bool[] BlackKeyPattern =
+      { false, true, false, true, false, false, true, false, true, false, true, false };
 
     public ChordKeyboard()
     {
-        // Setup basic styling
         AddToClassList("chord-keyboard");
-        style.flexDirection = FlexDirection.Row;
-        style.alignItems = Align.Center;
-        style.height = 120;
-
         CreateUI();
         GenerateKeys();
         UpdateShiftButtons();
     }
 
-    // Creates the main UI structure: left button, keyboard container, right button
     void CreateUI()
     {
         // Left octave shift button
@@ -47,10 +43,6 @@ public sealed partial class ChordKeyboard : VisualElement
         // Piano keys container
         keyboardContainer = new VisualElement { name = "keyboard-container" };
         keyboardContainer.AddToClassList("keyboard-container");
-        keyboardContainer.style.flexGrow = 1;
-        keyboardContainer.style.flexDirection = FlexDirection.Row;
-        keyboardContainer.style.position = Position.Relative;
-        keyboardContainer.style.height = 100;
         Add(keyboardContainer);
 
         // Right octave shift button
@@ -62,10 +54,7 @@ public sealed partial class ChordKeyboard : VisualElement
     Button CreateShiftButton(string text, string name, int direction)
     {
         var button = new Button(() => ShiftOctave(direction))
-        {
-            text = text,
-            name = name
-        };
+            { text = text, name = name };
         button.AddToClassList("octave-shift-button");
         return button;
     }
@@ -93,10 +82,10 @@ public sealed partial class ChordKeyboard : VisualElement
     }
 
     // Creates and categorizes piano keys into white and black keys
-    (System.Collections.Generic.List<PianoKey> whiteKeys, System.Collections.Generic.List<PianoKey> blackKeys) CreatePianoKeys(int startNote)
+    (List<PianoKey> whiteKeys, List<PianoKey> blackKeys) CreatePianoKeys(int startNote)
     {
-        var whiteKeys = new System.Collections.Generic.List<PianoKey>();
-        var blackKeys = new System.Collections.Generic.List<PianoKey>();
+        var whiteKeys = new List<PianoKey>();
+        var blackKeys = new List<PianoKey>();
 
         for (int i = 0; i < TOTAL_SEMITONES; i++)
         {
@@ -122,11 +111,10 @@ public sealed partial class ChordKeyboard : VisualElement
         int whiteKeyIndex = GetWhiteKeyIndex(blackKey.Note - startNote);
         float whiteKeyWidth = 100f / GetWhiteKeyCount();
         
-        blackKey.style.position = Position.Absolute;
+        blackKey.AddToClassList("piano-key--black-positioned");
         blackKey.style.left = Length.Percent(whiteKeyWidth * (whiteKeyIndex + 0.7f));
         blackKey.style.width = Length.Percent(whiteKeyWidth * 0.6f);
         blackKey.style.height = Length.Percent(60);
-        blackKey.style.top = 0;
     }
 
     // Calculates the white key index for a given semitone offset
