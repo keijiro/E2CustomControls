@@ -6,12 +6,9 @@ using UnityEngine.UIElements;
 
 namespace E2Controls {
 
-// A chord keyboard UI element that allows selecting up to 4 notes across 3 octaves
-public sealed class ChordKeyboard : VisualElement
+[UxmlElement]
+public sealed partial class ChordKeyboard : VisualElement
 {
-    public new class UxmlFactory : UxmlFactory<ChordKeyboard, UxmlTraits> { }
-    public new class UxmlTraits : VisualElement.UxmlTraits { }
-
     // Events for chord and octave changes
     public event Action<int[]> OnChordChanged;
     public event Action<int> OnOctaveChanged;

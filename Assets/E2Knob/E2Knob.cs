@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 namespace E2Controls {
 
 [UxmlElement]
-public partial class E2Knob : BaseField<int>
+public sealed partial class E2Knob : BaseField<int>
 {
     #region UI attributes
 
