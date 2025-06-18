@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,11 +10,12 @@ public sealed partial class ChordKeyboard : VisualElement
 {
     #region Public members
 
-    public (int, int, int, int) CurrentChord => _chord;
+    public (int note1, int note2, int note3, int note4)
+        CurrentChord { get; private set; } = (-1, -1, -1, -1);
 
     public void ClearChord()
     {
-        _chord = (-1, -1, -1, -1);
+        CurrentChord = (-1, -1, -1, -1);
         UpdateKeyStates();
         SendChordChangedEvent();
     }
@@ -52,8 +53,7 @@ public sealed partial class ChordKeyboard : VisualElement
     const int TotalOctaves = 3;
     const int TotalKeys = TotalOctaves * 12;
 
-    // Note management - simplified to 4-note tuple
-    (int note1, int note2, int note3, int note4) _chord = (-1, -1, -1, -1);
+    // Note management
     int _baseOctave = 3;
     
     // UI elements
@@ -120,33 +120,32 @@ public sealed partial class ChordKeyboard : VisualElement
     }
 
     // Adds a note with FIFO behavior (only when all 4 slots are filled)
-    void AddNote(int midiNote)
+    void AddNote(int note)
     {
-        var (n1, n2, n3, n4) = _chord;
-        
+        var (n1, n2, n3, n4) = CurrentChord;
         // Find first empty slot
         if (n1 == -1)
-            _chord = (midiNote, n2, n3, n4);
+            CurrentChord = (note, n2, n3, n4);
         else if (n2 == -1)
-            _chord = (n1, midiNote, n3, n4);
+            CurrentChord = (n1, note, n3, n4);
         else if (n3 == -1)
-            _chord = (n1, n2, midiNote, n4);
+            CurrentChord = (n1, n2, note, n4);
         else if (n4 == -1)
-            _chord = (n1, n2, n3, midiNote);
+            CurrentChord = (n1, n2, n3, note);
         else
             // All slots filled, use FIFO
-            _chord = (n2, n3, n4, midiNote);
+            CurrentChord = (n2, n3, n4, note);
     }
 
     // Removes a specific note from chord
-    void RemoveNote(int midiNote)
+    void RemoveNote(int note)
     {
-        var (n1, n2, n3, n4) = _chord;
-        _chord = (
-            n1 == midiNote ? -1 : n1,
-            n2 == midiNote ? -1 : n2,
-            n3 == midiNote ? -1 : n3,
-            n4 == midiNote ? -1 : n4
+        var (n1, n2, n3, n4) = CurrentChord;
+        CurrentChord = (
+            n1 == note ? -1 : n1,
+            n2 == note ? -1 : n2,
+            n3 == note ? -1 : n3,
+            n4 == note ? -1 : n4
         );
         CompactChord();
     }
@@ -154,57 +153,39 @@ public sealed partial class ChordKeyboard : VisualElement
     // Compacts chord by moving active notes to the front
     void CompactChord()
     {
-        var activeNotes = new[] { _chord.note1, _chord.note2, _chord.note3, _chord.note4 }
-            .Where(n => n != -1).ToArray();
-        _chord = (
-            activeNotes.Length > 0 ? activeNotes[0] : -1,
-            activeNotes.Length > 1 ? activeNotes[1] : -1,
-            activeNotes.Length > 2 ? activeNotes[2] : -1,
-            activeNotes.Length > 3 ? activeNotes[3] : -1
-        );
+        var i = 0;
+        Span<int> chord = stackalloc int[]{-1, -1, -1, -1};
+        if (CurrentChord.note1 != -1) chord[i++] = CurrentChord.note1;
+        if (CurrentChord.note2 != -1) chord[i++] = CurrentChord.note2;
+        if (CurrentChord.note3 != -1) chord[i++] = CurrentChord.note3;
+        if (CurrentChord.note4 != -1) chord[i++] = CurrentChord.note4;
+        CurrentChord = (chord[0], chord[1], chord[2], chord[3]);
     }
 
     // Checks if a note is currently active
-    bool IsNoteActive(int midiNote) =>
-        _chord.note1 == midiNote || _chord.note2 == midiNote || 
-        _chord.note3 == midiNote || _chord.note4 == midiNote;
+    bool IsNoteActive(int note)
+        => CurrentChord.note1 == note || CurrentChord.note2 == note || 
+           CurrentChord.note3 == note || CurrentChord.note4 == note;
 
-    // Updates visual state of all piano keys based on active notes
     void UpdateKeyStates()
     {
-        var baseNote = BaseNote;
         foreach (var key in _pianoKeys)
-        {
-            var midiNote = baseNote + key.RelativeNote;
-            key.IsPressed = IsNoteActive(midiNote);
-        }
+            key.IsPressed = IsNoteActive(BaseNote + key.RelativeNote);
     }
 
-    // Shifts the keyboard octave range up or down
     void ShiftOctave(int direction)
     {
-        var newOctave = _baseOctave + direction;
-        if (newOctave is < 0 or > 7) return;
-
-        _baseOctave = newOctave;
+        _baseOctave = Math.Clamp(_baseOctave + direction, 0, 7);
         UpdateKeyStates();
-        UpdateShiftButtons();
-    }
-
-    // Updates octave shift button enabled states
-    void UpdateShiftButtons()
-    {
         _leftShiftButton.SetEnabled(_baseOctave > 0);
         _rightShiftButton.SetEnabled(_baseOctave < 7);
     }
 
-    // Calculates the MIDI note number for the current base octave
     int BaseNote => _baseOctave * 12 + 12;
 
-    // Sends ChangeEvent with current chord as (int, int, int, int) tuple
     void SendChordChangedEvent()
     {
-        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, _chord);
+        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, CurrentChord);
         evt.target = this;
         SendEvent(evt);
     }
