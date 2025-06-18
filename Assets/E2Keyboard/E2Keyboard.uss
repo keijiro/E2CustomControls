@@ -1,7 +1,5 @@
 :root {
-    --color-focus: rgb(100, 120, 180);
     --color-panel: rgb(48, 48, 48);
-
     --color-line: rgb(226, 150, 65);
     --color-line-20: rgb(46, 30, 13);
     --color-line-30: rgb(79, 52, 23);
@@ -10,13 +8,6 @@
     --color-line-60: rgb(180, 120, 52);
     --color-line-70: rgb(213, 142, 62);
     --color-line-80: rgb(226, 150, 65);
-
-    --color-label: rgb(164, 164, 164);
-    --color-label-dim: rgb(128, 128, 128);
-    --color-line-dim: rgb(69, 45, 20);
-    --color-line-dim-hover: rgb(77, 60, 26);
-    --color-bg-hover: rgb(12, 12, 12);
-    --color-bg-active: rgb(24, 24, 24);
 }
 
 
@@ -73,18 +64,20 @@
 /* Chord Keyboard Styles */
 
 .e2-chord-keyboard {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
     margin: 2px;
     padding: 2px;
-    width: 300px;
-    height: 40px;
+    width: 320px;
+    height: 64px;
 }
 
-.e2-keyboard-container {
+.e2-chord-keyboard__toolbar {
+    flex-direction: row;
+}
+
+.e2-chord-keyboard-container {
     flex-direction: row;
     flex-grow: 1;
-    height: 100%;
 }
 
 .octave-shift-button {
@@ -92,17 +85,23 @@
     border-width: 0.5px;
     border-radius: 4px;
     border-color: var(--color-line);
+    width: 20px;
     min-width: initial;
     min-height: initial;
-    width: 20px;
-    height: 12px;
+    margin: 1px;
     padding: 0;
-    margin: 0;
     color: var(--color-line);
     font-size: 8px;
-
 }
 
 .unity-label {
     color: white;
+}
+
+.e2-chord-keyboard__octave-label {
+    flex-grow: 1;
+    margin: 1px;
+    padding: 0;
+    color: var(--color-line);
+    font-size: 8px;
 }

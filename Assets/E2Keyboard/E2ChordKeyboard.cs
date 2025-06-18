@@ -28,18 +28,26 @@ public sealed partial class E2ChordKeyboard : VisualElement
     {
         AddToClassList("e2-chord-keyboard");
 
+        // Toolbar
+        var toolbar = new VisualElement();
+        toolbar.AddToClassList("e2-chord-keyboard__toolbar");
+        Add(toolbar);
+
+        // Octave label
+        _octaveLabel = new Label("C3");
+        _octaveLabel.AddToClassList("e2-chord-keyboard__octave-label");
+        toolbar.Add(_octaveLabel);
+
         // Octave shift buttons
         _leftShiftButton = CreateShiftButton("<", -1);
         _rightShiftButton = CreateShiftButton(">", 1);
+        toolbar.Add(_leftShiftButton);
+        toolbar.Add(_rightShiftButton);
 
         // Piano keys container
         _keyboardContainer = new VisualElement();
-        _keyboardContainer.AddToClassList("e2-keyboard-container");
-
-        // Base layout
-        Add(_leftShiftButton);
+        _keyboardContainer.AddToClassList("e2-chord-keyboard-container");
         Add(_keyboardContainer);
-        Add(_rightShiftButton);
 
         // Piano keys
         CreatePianoKeys(_keyboardContainer);
@@ -58,6 +66,7 @@ public sealed partial class E2ChordKeyboard : VisualElement
     int BaseNote => _baseOctave * 12 + 12;
     
     // UI elements
+    Label _octaveLabel;
     Button _leftShiftButton;
     Button _rightShiftButton;
     VisualElement _keyboardContainer;
@@ -140,6 +149,7 @@ public sealed partial class E2ChordKeyboard : VisualElement
     {
         _baseOctave = Math.Clamp(_baseOctave + direction, 0, 7);
         UpdateKeyStates();
+        _octaveLabel.text = $"C{_baseOctave}";
         _leftShiftButton.SetEnabled(_baseOctave > 0);
         _rightShiftButton.SetEnabled(_baseOctave < 7);
     }
