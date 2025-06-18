@@ -71,3 +71,7 @@
     position: absolute;
     top: 0;
 }
+
+.unity-label {
+    color: white;
+}
