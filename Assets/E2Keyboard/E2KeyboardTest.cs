@@ -18,7 +18,7 @@ public sealed class E2KeyboardTest : MonoBehaviour
     {
         var root = GetComponent<UIDocument>().rootVisualElement;
 
-        var chordKeyboard = new ChordKeyboard();
+        var chordKeyboard = new E2ChordKeyboard();
         chordKeyboard.RegisterCallback<ChangeEvent<(int, int, int, int)>>(OnChordChanged);
         root.Add(chordKeyboard);
 

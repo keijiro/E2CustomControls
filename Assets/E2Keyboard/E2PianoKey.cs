@@ -3,7 +3,7 @@ using UnityEngine.UIElements;
 
 namespace E2Controls {
 
-public sealed class PianoKey : VisualElement
+public sealed class E2PianoKey : VisualElement
 {
     public event Action<int> OnClicked;
 
@@ -16,7 +16,7 @@ public sealed class PianoKey : VisualElement
 
     bool _isPressed;
 
-    public PianoKey(int relativeNote)
+    public E2PianoKey(int relativeNote)
     {
         RelativeNote = relativeNote;
         AddToClassList("piano-key");

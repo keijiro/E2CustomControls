@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace E2Controls {
 
 [UxmlElement]
-public sealed partial class ChordKeyboard : VisualElement
+public sealed partial class E2ChordKeyboard : VisualElement
 {
     #region Public members
 
@@ -24,7 +24,7 @@ public sealed partial class ChordKeyboard : VisualElement
 
     #region Constructor
 
-    public ChordKeyboard()
+    public E2ChordKeyboard()
     {
         AddToClassList("chord-keyboard");
 
@@ -61,7 +61,7 @@ public sealed partial class ChordKeyboard : VisualElement
     Button _leftShiftButton;
     Button _rightShiftButton;
     VisualElement _keyboardContainer;
-    List<PianoKey> _pianoKeys = new();
+    List<E2PianoKey> _pianoKeys = new();
 
     static int GetWhiteKeyIndex(int note)
     {
@@ -166,7 +166,7 @@ public sealed partial class ChordKeyboard : VisualElement
         // Key instantiation
         for (var i = 0; i < TotalKeys; i++)
         {
-            var key = new PianoKey(i);
+            var key = new E2PianoKey(i);
             key.OnClicked += OnKeyClicked;
             _pianoKeys.Add(key);
         }
@@ -184,7 +184,7 @@ public sealed partial class ChordKeyboard : VisualElement
         }
     }
 
-    void PositionBlackKey(PianoKey key)
+    void PositionBlackKey(E2PianoKey key)
     {
         var index = GetWhiteKeyIndex(key.RelativeNote);
         var width = 100.0f / (TotalOctaves * 7);
