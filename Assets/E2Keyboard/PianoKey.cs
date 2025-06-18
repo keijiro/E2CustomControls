@@ -9,15 +9,18 @@ public sealed class PianoKey : VisualElement
 
     public int RelativeNote { get; private set; }
 
+    public bool IsBlackKey
+      => (RelativeNote & 1) == (RelativeNote % 12 < 5 ? 1 : 0);
+
     public bool IsPressed { get => _isPressed; set => SetPressed(value); }
 
     bool _isPressed;
 
-    public PianoKey(int relativeNote, bool isBlackKey)
+    public PianoKey(int relativeNote)
     {
         RelativeNote = relativeNote;
         AddToClassList("piano-key");
-        AddToClassList(isBlackKey ? "piano-key--black" : "piano-key--white");
+        AddToClassList(IsBlackKey ? "piano-key--black" : "piano-key--white");
         RegisterCallback<ClickEvent>(OnClick);
     }
 

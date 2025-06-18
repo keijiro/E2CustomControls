@@ -80,23 +80,22 @@ public sealed partial class ChordKeyboard : VisualElement
 
     void CreatePianoKeys(VisualElement container)
     {
-        // First pass: create and add white keys (background layer)
+        // Key instantiation
         for (var i = 0; i < TotalKeys; i++)
         {
-            if (IsBlackKey(i)) continue;
-            var key = new PianoKey(i, false);
+            var key = new PianoKey(i);
             key.OnClicked += OnKeyClicked;
             _pianoKeys.Add(key);
-            container.Add(key);
         }
+
+        // First pass: white keys (background layer)
+        foreach (var key in _pianoKeys)
+            if (!key.IsBlackKey) container.Add(key);
         
-        // Second pass: create and add black keys with positioning
-        for (var i = 0; i < TotalKeys; i++)
+        // Second pass: black keys with positioning
+        foreach (var key in _pianoKeys)
         {
-            if (!IsBlackKey(i)) continue;
-            var key = new PianoKey(i, true);
-            key.OnClicked += OnKeyClicked;
-            _pianoKeys.Add(key);
+            if (!key.IsBlackKey) continue;
             container.Add(key);
             PositionBlackKey(key);
         }
@@ -115,12 +114,7 @@ public sealed partial class ChordKeyboard : VisualElement
     void OnKeyClicked(int relativeNote)
     {
         var note = BaseNote + relativeNote;
-
-        if (IsNoteActive(note))
-            RemoveNote(note);
-        else
-            AddNote(note);
-
+        if (IsNoteActive(note)) RemoveNote(note); else AddNote(note);
         UpdateKeyStates();
         SendChordChangedEvent();
     }
