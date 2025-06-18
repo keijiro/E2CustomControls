@@ -35,23 +35,13 @@ public sealed partial class ChordKeyboard : VisualElement
         _keyboardContainer = new VisualElement();
         _keyboardContainer.AddToClassList("keyboard-container");
 
-        // Piano keys
-        var (whiteKeys, blackKeys) = CreatePianoKeys(BaseNote);
-
         // Base layout
         Add(_leftShiftButton);
         Add(_keyboardContainer);
         Add(_rightShiftButton);
 
-        // Add white keys first (they form the background)
-        whiteKeys.ForEach(_keyboardContainer.Add);
-        
-        // Add black keys on top with positioning
-        foreach (var blackKey in blackKeys)
-        {
-            _keyboardContainer.Add(blackKey);
-            PositionBlackKey(blackKey, BaseNote);
-        }
+        // Piano keys
+        CreatePianoKeys(_keyboardContainer);
     }
 
     #endregion
@@ -59,7 +49,8 @@ public sealed partial class ChordKeyboard : VisualElement
     #region Private members
 
     // Constants
-    const int TotalKeys = 3 * 12;
+    const int TotalOctaves = 3;
+    const int TotalKeys = TotalOctaves * 12;
 
     // Note management - simplified to 4-note tuple
     (int note1, int note2, int note3, int note4) _chord = (-1, -1, -1, -1);
@@ -74,7 +65,12 @@ public sealed partial class ChordKeyboard : VisualElement
     static bool IsBlackKey(int noteInOctave)
       => (noteInOctave & 1) == (noteInOctave % 12 < 5 ? 1 : 0);
 
-    // Helper method to create octave shift buttons
+    static int GetWhiteKeyIndex(int note)
+    {
+        var (o, i) = (note / 12, note % 12);
+        return o * 7 + (i < 5 ? i / 2 : (i - 5) / 2 + 3);
+    }
+
     Button CreateShiftButton(string text, int direction)
     {
         var button = new Button(() => ShiftOctave(direction)){ text = text };
@@ -82,74 +78,48 @@ public sealed partial class ChordKeyboard : VisualElement
         return button;
     }
 
-    // Creates and categorizes piano keys into white and black keys
-    (List<PianoKey> whiteKeys, List<PianoKey> blackKeys) CreatePianoKeys(int startNote)
+    void CreatePianoKeys(VisualElement container)
     {
-        var whiteKeys = new List<PianoKey>();
-        var blackKeys = new List<PianoKey>();
-
+        // First pass: create and add white keys (background layer)
         for (var i = 0; i < TotalKeys; i++)
         {
-            var isBlack = IsBlackKey(i);
-
-            var key = new PianoKey(i, isBlack);
+            if (IsBlackKey(i)) continue;
+            var key = new PianoKey(i, false);
             key.OnClicked += OnKeyClicked;
             _pianoKeys.Add(key);
-
-            if (isBlack)
-                blackKeys.Add(key);
-            else
-                whiteKeys.Add(key);
+            container.Add(key);
         }
-
-        return (whiteKeys, blackKeys);
-    }
-
-    // Positions a black key relative to white keys
-    void PositionBlackKey(PianoKey blackKey, int startNote)
-    {
-        var whiteKeyIndex = GetWhiteKeyIndex(blackKey.RelativeNote);
-        var whiteKeyWidth = 100f / GetWhiteKeyCount();
         
-        blackKey.AddToClassList("piano-key--black-positioned");
-        blackKey.style.left = Length.Percent(whiteKeyWidth * (whiteKeyIndex - 1 + 0.7f));
-        blackKey.style.width = Length.Percent(whiteKeyWidth * 0.6f);
-        blackKey.style.height = Length.Percent(60);
-    }
-
-    // Calculates the white key index for a given semitone offset
-    int GetWhiteKeyIndex(int semitoneFromStart)
-    {
-        var whiteKeyCount = 0;
-        for (var i = 0; i < semitoneFromStart; i++)
+        // Second pass: create and add black keys with positioning
+        for (var i = 0; i < TotalKeys; i++)
         {
-            if (!IsBlackKey(i))
-                whiteKeyCount++;
+            if (!IsBlackKey(i)) continue;
+            var key = new PianoKey(i, true);
+            key.OnClicked += OnKeyClicked;
+            _pianoKeys.Add(key);
+            container.Add(key);
+            PositionBlackKey(key);
         }
-        return whiteKeyCount;
     }
 
-    // Gets total number of white keys in the current range
-    int GetWhiteKeyCount()
+    void PositionBlackKey(PianoKey key)
     {
-        return Enumerable.Range(0, TotalKeys)
-            .Count(i => !IsBlackKey(i));
+        var index = GetWhiteKeyIndex(key.RelativeNote);
+        var width = 100.0f / (TotalOctaves * 7);
+        key.AddToClassList("piano-key--black-positioned");
+        key.style.left = Length.Percent(width * (index + 0.7f));
+        key.style.width = Length.Percent(width * 0.6f);
+        key.style.height = Length.Percent(60);
     }
 
-    // Handles piano key click events
     void OnKeyClicked(int relativeNote)
     {
-        var midiNote = BaseNote + relativeNote;
-        var wasPressed = IsNoteActive(midiNote);
-        
-        if (wasPressed)
-        {
-            RemoveNote(midiNote);
-        }
+        var note = BaseNote + relativeNote;
+
+        if (IsNoteActive(note))
+            RemoveNote(note);
         else
-        {
-            AddNote(midiNote);
-        }
+            AddNote(note);
 
         UpdateKeyStates();
         SendChordChangedEvent();
