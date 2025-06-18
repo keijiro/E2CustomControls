@@ -19,8 +19,9 @@ public sealed class E2PianoKey : VisualElement
     public E2PianoKey(int relativeNote)
     {
         RelativeNote = relativeNote;
-        AddToClassList("piano-key");
-        AddToClassList(IsBlackKey ? "piano-key--black" : "piano-key--white");
+        AddToClassList("e2-piano-key");
+        AddToClassList(IsBlackKey ? "e2-piano-key__black" : "e2-piano-key__white");
+        if (!IsBlackKey && relativeNote > 0) AddToClassList("e2-piano-key--no-left");
         RegisterCallback<ClickEvent>(OnClick);
     }
 
@@ -31,9 +32,9 @@ public sealed class E2PianoKey : VisualElement
     {
         _isPressed = pressed;
         if (pressed)
-            AddToClassList("piano-key--pressed");
+            AddToClassList("e2-piano-key--pressed");
         else
-            RemoveFromClassList("piano-key--pressed");
+            RemoveFromClassList("e2-piano-key--pressed");
     }
 }
 

@@ -26,7 +26,7 @@ public sealed partial class E2ChordKeyboard : VisualElement
 
     public E2ChordKeyboard()
     {
-        AddToClassList("chord-keyboard");
+        AddToClassList("e2-chord-keyboard");
 
         // Octave shift buttons
         _leftShiftButton = CreateShiftButton("<", -1);
@@ -34,7 +34,7 @@ public sealed partial class E2ChordKeyboard : VisualElement
 
         // Piano keys container
         _keyboardContainer = new VisualElement();
-        _keyboardContainer.AddToClassList("keyboard-container");
+        _keyboardContainer.AddToClassList("e2-keyboard-container");
 
         // Base layout
         Add(_leftShiftButton);
@@ -188,10 +188,8 @@ public sealed partial class E2ChordKeyboard : VisualElement
     {
         var index = GetWhiteKeyIndex(key.RelativeNote);
         var width = 100.0f / (TotalOctaves * 7);
-        key.AddToClassList("piano-key--black-positioned");
         key.style.left = Length.Percent(width * (index + 0.7f));
         key.style.width = Length.Percent(width * 0.6f);
-        key.style.height = Length.Percent(60);
     }
 
     #endregion

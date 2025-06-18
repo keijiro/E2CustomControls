@@ -1,75 +1,106 @@
+:root {
+    --color-focus: rgb(100, 120, 180);
+    --color-panel: rgb(48, 48, 48);
+
+    --color-line: rgb(226, 150, 65);
+    --color-line-20: rgb(46, 30, 13);
+    --color-line-30: rgb(79, 52, 23);
+    --color-line-40: rgb(113, 75, 33);
+    --color-line-50: rgb(146, 97, 42);
+    --color-line-60: rgb(180, 120, 52);
+    --color-line-70: rgb(213, 142, 62);
+    --color-line-80: rgb(226, 150, 65);
+
+    --color-label: rgb(164, 164, 164);
+    --color-label-dim: rgb(128, 128, 128);
+    --color-line-dim: rgb(69, 45, 20);
+    --color-line-dim-hover: rgb(77, 60, 26);
+    --color-bg-hover: rgb(12, 12, 12);
+    --color-bg-active: rgb(24, 24, 24);
+}
+
+
 /* Piano Key Base Styles */
-.piano-key {
-    border-top-width: 1px;
-    border-bottom-width: 1px;
-    border-left-width: 1px;
-    border-right-width: 1px;
+
+.e2-piano-key {
+    border-width: 0.5px;
+    border-color: var(--color-line);
+    background-color: var(--color-panel);
+}
+
+.e2-piano-key--no-left {
+    border-left-width: 0;
 }
 
 /* White Key Styles */
-.piano-key--white {
-    background-color: white;
-    border-top-color: rgb(179, 179, 179);
-    border-bottom-color: rgb(179, 179, 179);
-    border-left-color: rgb(179, 179, 179);
-    border-right-color: rgb(179, 179, 179);
+
+.e2-piano-key__white {
     flex-grow: 1;
     height: 100%;
 }
 
-.piano-key--white.piano-key:hover {
-    background-color: rgb(242, 242, 242);
+.e2-piano-key__white.e2-piano-key:hover {
+    background-color: var(--color-line-30);
 }
 
-.piano-key--white.piano-key--pressed {
-    background-color: rgb(153, 204, 255);
+.e2-piano-key__white.e2-piano-key--pressed {
+    background-color: var(--color-line-50);
 }
 
-.piano-key--white.piano-key--pressed:hover {
-    background-color: rgb(163, 214, 255);
+.e2-piano-key__white.e2-piano-key--pressed:hover {
+    background-color: var(--color-line-60);
 }
 
 /* Black Key Styles */
-.piano-key--black {
-    background-color: rgb(51, 51, 51);
-    border-top-color: black;
-    border-bottom-color: black;
-    border-left-color: black;
-    border-right-color: black;
+.e2-piano-key__black {
+    position: absolute;
+    top: 0;
+    height: 60%;
 }
 
-.piano-key--black.piano-key:hover {
-    background-color: rgb(77, 77, 77);
+.e2-piano-key__black.e2-piano-key:hover {
+    background-color: var(--color-line-30);
 }
 
-.piano-key--black.piano-key--pressed {
-    background-color: rgb(102, 153, 255);
+.e2-piano-key__black.e2-piano-key--pressed {
+    background-color: var(--color-line-50);
 }
 
-.piano-key--black.piano-key--pressed:hover {
-    background-color: rgb(112, 163, 255);
+.e2-piano-key__black.e2-piano-key--pressed:hover {
+    background-color: var(--color-line-60);
 }
 
-.chord-keyboard {
+/* Chord Keyboard Styles */
+
+.e2-chord-keyboard {
     flex-direction: row;
     align-items: center;
-    height: 120px;
+    margin: 2px;
+    padding: 2px;
+    width: 300px;
+    height: 40px;
 }
 
-.keyboard-container {
-    flex-grow: 1;
+.e2-keyboard-container {
     flex-direction: row;
-    position: relative;
-    height: 100px;
+    flex-grow: 1;
+    height: 100%;
 }
 
 .octave-shift-button {
-    
-}
+    background-color: initial;
+    border-width: 0.5px;
+    border-radius: 4px;
+    border-color: var(--color-line);
+    min-width: initial;
+    min-height: initial;
+    width: 20px;
+    height: 12px;
+    padding: 0;
+    margin: 0;
+    color: var(--color-line);
+    font-size: 8px;
 
-.piano-key--black-positioned {
-    position: absolute;
-    top: 0;
 }
 
 .unity-label {
