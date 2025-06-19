@@ -1,20 +1,24 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:VisualElement data-source-type="E2KnobTest, Assembly-CSharp" style="flex-direction: row; margin-top: 8px; margin-right: 8px; margin-bottom: 8px; margin-left: 8px; align-items: center;">
-        <E2Controls.E2Knob label="Attack" high-value="16" />
-        <E2Controls.E2Knob label="Pitch" high-value="64" is-relative="true" low-value="-64" sensitivity="0.5" />
-        <E2Controls.E2Knob label="Type" high-value="408" sensitivity="0.2">
-            <Bindings>
-                <ui:DataBinding property="value" data-source-path="TypeValue" binding-mode="TwoWay" />
-            </Bindings>
-        </E2Controls.E2Knob>
-        <ui:VisualElement style="height: 20px; border-left-width: 1px; margin-left: 8px; padding-left: 3px; border-left-color: rgb(171, 171, 171); border-right-color: rgb(171, 171, 171); border-top-color: rgb(171, 171, 171); border-bottom-color: rgb(171, 171, 171); justify-content: center;">
-            <ui:Label text="Name" style="color: rgb(192, 192, 192); margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
+    <ui:VisualElement style="align-items: flex-start;">
+        <ui:VisualElement data-source-type="E2KnobTest, Assembly-CSharp" class="panel">
+            <E2Controls.E2Knob label="Attack" high-value="16" />
+            <E2Controls.E2Knob label="Pitch" high-value="64" is-relative="true" low-value="-64" sensitivity="0.5" />
+            <E2Controls.E2Knob label="Type" high-value="408" sensitivity="0.2">
                 <Bindings>
-                    <ui:DataBinding property="text" data-source-path="TypeName" binding-mode="ToTarget" />
+                    <ui:DataBinding property="value" data-source-path="TypeValue" binding-mode="TwoWay" />
                 </Bindings>
-            </ui:Label>
+            </E2Controls.E2Knob>
+            <ui:VisualElement style="height: 20px; border-left-width: 1px; margin-left: 8px; padding-left: 3px; border-left-color: rgb(171, 171, 171); border-right-color: rgb(171, 171, 171); border-top-color: rgb(171, 171, 171); border-bottom-color: rgb(171, 171, 171); justify-content: center;">
+                <ui:Label text="Name" style="color: rgb(192, 192, 192); margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="TypeName" binding-mode="ToTarget" />
+                    </Bindings>
+                </ui:Label>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="panel">
+            <E2Controls.E2ChordKeyboard />
+            <ui:Label name="chord-label" class="debug-label" />
         </ui:VisualElement>
     </ui:VisualElement>
-    <E2Controls.E2ChordKeyboard name="keyboard" />
-    <ui:Label name="chord-label" />
 </ui:UXML>
