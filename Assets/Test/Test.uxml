@@ -15,4 +15,6 @@
             </ui:Label>
         </ui:VisualElement>
     </ui:VisualElement>
+    <E2Controls.E2ChordKeyboard name="keyboard" />
+    <ui:Label name="chord-label" />
 </ui:UXML>
