@@ -33,6 +33,7 @@
     border-left-width: 1px;
     border-color: rgb(128, 128, 128);
     margin: 0;
+    margin-left: 6px;
     padding: 1px;
     padding-left: 4px;
 }
