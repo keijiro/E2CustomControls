@@ -10,12 +10,36 @@ public sealed partial class E2ChordKeyboard : VisualElement
 {
     #region Public members
 
-    public (int note1, int note2, int note3, int note4)
-        CurrentChord { get; private set; } = (-1, -1, -1, -1);
+    public (int note1, int note2, int note3, int note4) CurrentChord 
+      { get => _chord; set  => SetCurrentChord(value); }
+
+    public int Note1 
+    { 
+        get => _chord.note1; 
+        set => SetCurrentChord((value, _chord.note2, _chord.note3, _chord.note4)); 
+    }
+
+    public int Note2 
+    { 
+        get => _chord.note2; 
+        set => SetCurrentChord((_chord.note1, value, _chord.note3, _chord.note4)); 
+    }
+
+    public int Note3 
+    { 
+        get => _chord.note3; 
+        set => SetCurrentChord((_chord.note1, _chord.note2, value, _chord.note4)); 
+    }
+
+    public int Note4 
+    { 
+        get => _chord.note4; 
+        set => SetCurrentChord((_chord.note1, _chord.note2, _chord.note3, value)); 
+    }
 
     public void ClearChord()
     {
-        CurrentChord = (-1, -1, -1, -1);
+        _chord = (-1, -1, -1, -1);
         UpdateKeyStates();
         SendChordChangedEvent();
     }
@@ -61,6 +85,10 @@ public sealed partial class E2ChordKeyboard : VisualElement
     const int TotalOctaves = 3;
     const int TotalKeys = TotalOctaves * 12;
 
+    // Property backing fields
+    (int note1, int note2, int note3, int note4)
+        _chord = (-1, -1, -1, -1);
+
     // Active range
     int _baseOctave = 3;
     int BaseNote => _baseOctave * 12 + 12;
@@ -84,33 +112,40 @@ public sealed partial class E2ChordKeyboard : VisualElement
 
     // Checks if a note is currently active
     bool IsNoteActive(int note)
-        => CurrentChord.note1 == note || CurrentChord.note2 == note || 
-           CurrentChord.note3 == note || CurrentChord.note4 == note;
+        => _chord.note1 == note || _chord.note2 == note || 
+           _chord.note3 == note || _chord.note4 == note;
+
+    void SetCurrentChord((int, int, int, int) chord)
+    {
+        _chord = chord;
+        UpdateKeyStates();
+        SendChordChangedEvent();
+    }
 
     // Adds a note with FIFO behavior (only when all 4 slots are filled)
     void AddNote(int note)
     {
-        var (n1, n2, n3, n4) = CurrentChord;
+        var (n1, n2, n3, n4) = _chord;
         // Find first empty slot
         if (n1 == -1)
-            CurrentChord = (note, n2, n3, n4);
+            _chord = (note, n2, n3, n4);
         else if (n2 == -1)
-            CurrentChord = (n1, note, n3, n4);
+            _chord = (n1, note, n3, n4);
         else if (n3 == -1)
-            CurrentChord = (n1, n2, note, n4);
+            _chord = (n1, n2, note, n4);
         else if (n4 == -1)
-            CurrentChord = (n1, n2, n3, note);
+            _chord = (n1, n2, n3, note);
         else
             // All slots filled, use FIFO
-            CurrentChord = (n2, n3, n4, note);
+            _chord = (n2, n3, n4, note);
     }
 
     // Removes a specific note from chord
     void RemoveNote(int note)
     {
-        var (n1, n2, n3, n4) = CurrentChord;
-        CurrentChord = (n1 == note ? -1 : n1, n2 == note ? -1 : n2,
-                        n3 == note ? -1 : n3, n4 == note ? -1 : n4);
+        var (n1, n2, n3, n4) = _chord;
+        _chord = (n1 == note ? -1 : n1, n2 == note ? -1 : n2,
+                  n3 == note ? -1 : n3, n4 == note ? -1 : n4);
         CompactChord();
     }
 
@@ -119,11 +154,11 @@ public sealed partial class E2ChordKeyboard : VisualElement
     {
         var i = 0;
         Span<int> chord = stackalloc int[]{-1, -1, -1, -1};
-        if (CurrentChord.note1 != -1) chord[i++] = CurrentChord.note1;
-        if (CurrentChord.note2 != -1) chord[i++] = CurrentChord.note2;
-        if (CurrentChord.note3 != -1) chord[i++] = CurrentChord.note3;
-        if (CurrentChord.note4 != -1) chord[i++] = CurrentChord.note4;
-        CurrentChord = (chord[0], chord[1], chord[2], chord[3]);
+        if (_chord.note1 != -1) chord[i++] = _chord.note1;
+        if (_chord.note2 != -1) chord[i++] = _chord.note2;
+        if (_chord.note3 != -1) chord[i++] = _chord.note3;
+        if (_chord.note4 != -1) chord[i++] = _chord.note4;
+        _chord = (chord[0], chord[1], chord[2], chord[3]);
     }
 
     #endregion
@@ -140,7 +175,7 @@ public sealed partial class E2ChordKeyboard : VisualElement
 
     void SendChordChangedEvent()
     {
-        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, CurrentChord);
+        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, _chord);
         evt.target = this;
         SendEvent(evt);
     }
