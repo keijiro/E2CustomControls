@@ -22,7 +22,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="panel">
-            <E2Controls.E2ChordKeyboard />
+            <E2Controls.E2ChordKeyboard note1="60" note2="62" />
             <ui:Label name="chord-label" class="debug-label" />
         </ui:VisualElement>
     </ui:VisualElement>

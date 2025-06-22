@@ -13,24 +13,28 @@ public sealed partial class E2ChordKeyboard : VisualElement
     public (int note1, int note2, int note3, int note4) CurrentChord 
       { get => _chord; set  => SetCurrentChord(value); }
 
+    [UxmlAttribute]
     public int Note1 
     { 
         get => _chord.note1; 
         set => SetCurrentChord((value, _chord.note2, _chord.note3, _chord.note4)); 
     }
 
+    [UxmlAttribute]
     public int Note2 
     { 
         get => _chord.note2; 
         set => SetCurrentChord((_chord.note1, value, _chord.note3, _chord.note4)); 
     }
 
+    [UxmlAttribute]
     public int Note3 
     { 
         get => _chord.note3; 
         set => SetCurrentChord((_chord.note1, _chord.note2, value, _chord.note4)); 
     }
 
+    [UxmlAttribute]
     public int Note4 
     { 
         get => _chord.note4; 
