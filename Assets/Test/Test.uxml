@@ -21,9 +21,37 @@
                 <E2Controls.E2Knob label="Glide" high-value="127" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement class="panel">
-            <E2Controls.E2ChordKeyboard note1="60" note2="62" />
-            <ui:Label name="chord-label" class="debug-label" />
+        <ui:VisualElement name="keyboard" data-source-type="E2Controls.E2KeyboardTest, Assembly-CSharp" class="panel">
+            <E2Controls.E2ChordKeyboard note1="60" note2="62">
+                <Bindings>
+                    <ui:DataBinding property="note1" data-source-path="Note1" binding-mode="ToWay" />
+                    <ui:DataBinding property="note2" data-source-path="Note2" binding-mode="ToWay" />
+                    <ui:DataBinding property="note3" data-source-path="Note3" binding-mode="ToWay" />
+                    <ui:DataBinding property="note4" data-source-path="Note4" binding-mode="ToWay" />
+                </Bindings>
+            </E2Controls.E2ChordKeyboard>
+            <ui:VisualElement style="flex-direction: row;">
+                <ui:Label class="debug-label">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="Note1Label" binding-mode="ToTarget" />
+                    </Bindings>
+                </ui:Label>
+                <ui:Label class="debug-label">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="Note2Label" binding-mode="ToTarget" />
+                    </Bindings>
+                </ui:Label>
+                <ui:Label class="debug-label">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="Note3Label" binding-mode="ToTarget" />
+                    </Bindings>
+                </ui:Label>
+                <ui:Label class="debug-label">
+                    <Bindings>
+                        <ui:DataBinding property="text" data-source-path="Note4Label" binding-mode="ToTarget" />
+                    </Bindings>
+                </ui:Label>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

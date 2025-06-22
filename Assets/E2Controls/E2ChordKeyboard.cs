@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,40 +11,14 @@ public sealed partial class E2ChordKeyboard : VisualElement
 {
     #region Public members
 
-    public (int note1, int note2, int note3, int note4) CurrentChord 
-      { get => _chord; set  => SetCurrentChord(value); }
-
-    [UxmlAttribute]
-    public int Note1 
-    { 
-        get => _chord.note1; 
-        set => SetCurrentChord((value, _chord.note2, _chord.note3, _chord.note4)); 
-    }
-
-    [UxmlAttribute]
-    public int Note2 
-    { 
-        get => _chord.note2; 
-        set => SetCurrentChord((_chord.note1, value, _chord.note3, _chord.note4)); 
-    }
-
-    [UxmlAttribute]
-    public int Note3 
-    { 
-        get => _chord.note3; 
-        set => SetCurrentChord((_chord.note1, _chord.note2, value, _chord.note4)); 
-    }
-
-    [UxmlAttribute]
-    public int Note4 
-    { 
-        get => _chord.note4; 
-        set => SetCurrentChord((_chord.note1, _chord.note2, _chord.note3, value)); 
-    }
+    [UxmlAttribute, CreateProperty] public int note1 { get => _note1; set => SetNote1(value); }
+    [UxmlAttribute, CreateProperty] public int note2 { get => _note2; set => SetNote2(value); }
+    [UxmlAttribute, CreateProperty] public int note3 { get => _note3; set => SetNote3(value); }
+    [UxmlAttribute, CreateProperty] public int note4 { get => _note4; set => SetNote4(value); }
 
     public void ClearChord()
     {
-        _chord = (-1, -1, -1, -1);
+        _note1 = _note2 = _note3 = _note4 = -1;
         UpdateKeyStates();
         SendChordChangedEvent();
     }
@@ -89,9 +64,17 @@ public sealed partial class E2ChordKeyboard : VisualElement
     const int TotalOctaves = 3;
     const int TotalKeys = TotalOctaves * 12;
 
+    // Binding IDs for properties
+    static readonly BindingId Note1Property = nameof(note1);
+    static readonly BindingId Note2Property = nameof(note2);
+    static readonly BindingId Note3Property = nameof(note3);
+    static readonly BindingId Note4Property = nameof(note4);
+
     // Property backing fields
-    (int note1, int note2, int note3, int note4)
-        _chord = (-1, -1, -1, -1);
+    int _note1 = -1;
+    int _note2 = -1;
+    int _note3 = -1;
+    int _note4 = -1;
 
     // Active range
     int _baseOctave = 3;
@@ -110,46 +93,72 @@ public sealed partial class E2ChordKeyboard : VisualElement
         return o * 7 + (i < 5 ? i / 2 : (i - 5) / 2 + 3);
     }
 
-    #endregion
-
-    #region Chord tuple operations
-
-    // Checks if a note is currently active
-    bool IsNoteActive(int note)
-        => _chord.note1 == note || _chord.note2 == note || 
-           _chord.note3 == note || _chord.note4 == note;
-
-    void SetCurrentChord((int, int, int, int) chord)
+    void SetNote1(int value)
     {
-        _chord = chord;
+        _note1 = value;
         UpdateKeyStates();
         SendChordChangedEvent();
     }
 
+    void SetNote2(int value)
+    {
+        _note2 = value;
+        UpdateKeyStates();
+        SendChordChangedEvent();
+    }
+
+    void SetNote3(int value)
+    {
+        _note3 = value;
+        UpdateKeyStates();
+        SendChordChangedEvent();
+    }
+
+    void SetNote4(int value)
+    {
+        _note4 = value;
+        UpdateKeyStates();
+        SendChordChangedEvent();
+    }
+
+    #endregion
+
+    #region Chord operations
+
+    // Checks if a note is currently active
+    bool IsNoteActive(int note)
+        => _note1 == note || _note2 == note || 
+           _note3 == note || _note4 == note;
+
     // Adds a note with FIFO behavior (only when all 4 slots are filled)
     void AddNote(int note)
     {
-        var (n1, n2, n3, n4) = _chord;
         // Find first empty slot
-        if (n1 == -1)
-            _chord = (note, n2, n3, n4);
-        else if (n2 == -1)
-            _chord = (n1, note, n3, n4);
-        else if (n3 == -1)
-            _chord = (n1, n2, note, n4);
-        else if (n4 == -1)
-            _chord = (n1, n2, n3, note);
+        if (_note1 == -1)
+            _note1 = note;
+        else if (_note2 == -1)
+            _note2 = note;
+        else if (_note3 == -1)
+            _note3 = note;
+        else if (_note4 == -1)
+            _note4 = note;
         else
+        {
             // All slots filled, use FIFO
-            _chord = (n2, n3, n4, note);
+            _note1 = _note2;
+            _note2 = _note3;
+            _note3 = _note4;
+            _note4 = note;
+        }
     }
 
     // Removes a specific note from chord
     void RemoveNote(int note)
     {
-        var (n1, n2, n3, n4) = _chord;
-        _chord = (n1 == note ? -1 : n1, n2 == note ? -1 : n2,
-                  n3 == note ? -1 : n3, n4 == note ? -1 : n4);
+        if (_note1 == note) _note1 = -1;
+        if (_note2 == note) _note2 = -1;
+        if (_note3 == note) _note3 = -1;
+        if (_note4 == note) _note4 = -1;
         CompactChord();
     }
 
@@ -158,11 +167,14 @@ public sealed partial class E2ChordKeyboard : VisualElement
     {
         var i = 0;
         Span<int> chord = stackalloc int[]{-1, -1, -1, -1};
-        if (_chord.note1 != -1) chord[i++] = _chord.note1;
-        if (_chord.note2 != -1) chord[i++] = _chord.note2;
-        if (_chord.note3 != -1) chord[i++] = _chord.note3;
-        if (_chord.note4 != -1) chord[i++] = _chord.note4;
-        _chord = (chord[0], chord[1], chord[2], chord[3]);
+        if (_note1 != -1) chord[i++] = _note1;
+        if (_note2 != -1) chord[i++] = _note2;
+        if (_note3 != -1) chord[i++] = _note3;
+        if (_note4 != -1) chord[i++] = _note4;
+        _note1 = chord[0];
+        _note2 = chord[1];
+        _note3 = chord[2];
+        _note4 = chord[3];
     }
 
     #endregion
@@ -175,11 +187,16 @@ public sealed partial class E2ChordKeyboard : VisualElement
         if (IsNoteActive(note)) RemoveNote(note); else AddNote(note);
         UpdateKeyStates();
         SendChordChangedEvent();
+        NotifyPropertyChanged(Note1Property);
+        NotifyPropertyChanged(Note2Property);
+        NotifyPropertyChanged(Note3Property);
+        NotifyPropertyChanged(Note4Property);
     }
 
     void SendChordChangedEvent()
     {
-        using var evt = ChangeEvent<(int, int, int, int)>.GetPooled(default, _chord);
+        using var evt = ChangeEvent<(int, int, int, int)>
+          .GetPooled(default, (_note1, _note2, _note3, _note4));
         evt.target = this;
         SendEvent(evt);
     }

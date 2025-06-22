@@ -1,4 +1,5 @@
 using System.Linq;
+using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -6,23 +7,24 @@ namespace E2Controls {
 
 public sealed class E2KeyboardTest : MonoBehaviour
 {
-    void Start()
-      => GetComponent<UIDocument>().rootVisualElement.Q<E2ChordKeyboard>()
-           .RegisterCallback<ChangeEvent<(int, int, int, int)>>(OnChordChanged);
+    [CreateProperty] public int Note1 { get; set; } = -1;
+    [CreateProperty] public int Note2 { get; set; } = -1;
+    [CreateProperty] public int Note3 { get; set; } = -1;
+    [CreateProperty] public int Note4 { get; set; } = -1;
+
+    [CreateProperty] public string Note1Label => GetNoteName(Note1);
+    [CreateProperty] public string Note2Label => GetNoteName(Note2);
+    [CreateProperty] public string Note3Label => GetNoteName(Note3);
+    [CreateProperty] public string Note4Label => GetNoteName(Note4);
 
     static readonly string[] NoteNames =
       { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
 
     static string GetNoteName(int note)
-      => $"{NoteNames[note % 12]}{note / 12 - 1}";
+      => note >= 0 ? $"{NoteNames[note % 12]}{note / 12 - 1}" : "";
 
-    void OnChordChanged(ChangeEvent<(int, int, int, int)> evt)
-    {
-        var (note1, note2, note3, note4) = evt.newValue;
-        var notes = new[]{ note1, note2, note3, note4 }.Where(n => n >= 0);
-        GetComponent<UIDocument>().rootVisualElement.Q<Label>("chord-label")
-          .text = string.Join(", ", notes.Select(GetNoteName));
-    }
+    void Start()
+      => GetComponent<UIDocument>().rootVisualElement.Q("keyboard").dataSource = this;
 }
 
 } // namespace E2Controls
